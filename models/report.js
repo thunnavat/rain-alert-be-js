@@ -1,24 +1,24 @@
 const mongoose = require('mongoose')
 
-const reportSchema = new mongoose.Schema({
+const rainreportSchema = new mongoose.Schema({
   _id: mongoose.Schema.Types.ObjectId,
   reportTime: { type: Date, required: true },
   reportDistrict: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Number,
     ref: 'District',
     required: true,
   },
   rainStatus: {
     type: String,
-    enum: ['no rain', 'light rain', 'moderate rain', 'heavy rain'],
+    enum: ['NO RAIN', 'LIGHT RAIN', 'MODERATE RAIN', 'HEAVY RAIN'],
     required: true,
   },
 })
 
-//   // Add indexes for efficient querying
-// reportSchema.index({ reportTime: 1 }) // Index for querying by reportTime
-// reportSchema.index({ reportDistrict: 1 }) // Index for querying by reportDistrict
+  // // Add indexes for efficient querying
+  // RainReportSchema.index({ reportTime: 1 }) // Index for querying by reportTime
+  // RainReportSchema.index({ reportDistrict: 1 }) // Index for querying by reportDistrict
 
-const Report = mongoose.model('Report', reportSchema)
+ const RainReport = mongoose.model('RainReport', rainreportSchema)
 
-module.exports = Report 
+  module.exports = RainReport // Export RainReport model

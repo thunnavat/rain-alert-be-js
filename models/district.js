@@ -8,8 +8,8 @@ const districtSchema = new mongoose.Schema({
 
 
 const District = mongoose.model('District', districtSchema)
-// const Report = mongoose.model('Report', reportSchema)
+
 
 module.exports = District // Export District model
-// module.exports = Report // Export Report model
+
 
