@@ -3,11 +3,8 @@ const router = express.Router()
 const districtController = require('../controller/districtController'); //
 
 //routes
-router.get('/', (req, res) => {
-  res.send('Server online')
-})
 
-router.get('/district', async (req, res) => { // Get all districts
+router.get('/', async (req, res) => { // Get all districts
   try {
     const result = await districtController.getDistricts();
     res.status(200).json(result);
@@ -17,7 +14,7 @@ router.get('/district', async (req, res) => { // Get all districts
   }
 });
 
-router.post('/district', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const result = await districtController.addDistricts(req.body);
     res.status(201).json(result);
