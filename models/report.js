@@ -15,10 +15,6 @@ const rainreportSchema = new mongoose.Schema({
   },
 })
 
-  // // Add indexes for efficient querying
-  // RainReportSchema.index({ reportTime: 1 }) // Index for querying by reportTime
-  // RainReportSchema.index({ reportDistrict: 1 }) // Index for querying by reportDistrict
+const RainReport = mongoose.model('RainReport', rainreportSchema)
 
- const RainReport = mongoose.model('RainReport', rainreportSchema)
-
-  module.exports = RainReport // Export RainReport model
+module.exports = RainReport // Export RainReport model
