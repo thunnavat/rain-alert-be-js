@@ -9,12 +9,12 @@ app.use(express.json())
 app.use('/api/district', districtRoute)
 app.use('/api/report', reportRoute)
 
-app.listen(3000, () => {
-  console.log('Server is running on port 3000')
+app.listen(8080, () => {
+  console.log('Server is running on port 8080')
 })
 
 mongoose
-  .connect('mongodb://admin:111111@cp23tt3.sit.kmutt.ac.th:27017/rainalert')
+  .connect('mongodb://admin:111111@database:27017/rainalert?directConnection=true') 
   .then(() => {
     console.log('connect to MongoDB')
   })
