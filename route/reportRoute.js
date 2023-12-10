@@ -6,16 +6,19 @@ router.get('/', async (req, res) => {
   try {
     const { specificTime, sort, rainStatus } = req.query;
     let reports;
+
     if (specificTime) {
       reports = await reportController.getReportsBySpecificTime(specificTime);
     } else {
       reports = await reportController.getReports();
     }
     if (rainStatus) {
-      const rainStatusArray = rainStatus.split(',');
-      let filteredReports = reports;
-      filteredReports = reports.filter(report => rainStatusArray.includes(report.rainStatus));
-      reports = filteredReports;
+      if (rainStatus.toLowerCase() !== 'all') {
+        const rainStatusArray = rainStatus.split(',');
+        let filteredReports = reports;
+        filteredReports = reports.filter(report => rainStatusArray.includes(report.rainStatus));
+        reports = filteredReports;
+      }
     }
     if (sort) {
       const [sortBy, sortOrder] = sort.split(',');
