@@ -37,13 +37,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-    res.status(200).json(reports);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-});
-
 router.get('/time', async (req, res) => {
   try {
     const reports = await reportController.getUniqueTimeReports()
