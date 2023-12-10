@@ -12,10 +12,10 @@ router.get('/', async (req, res) => {
       reports = await reportController.getReports();
     }
     if (rainStatus) {
-      if (rainStatus.toLowerCase() === 'all') {
-      } else {
-        reports = reports.filter(report => report.rainStatus === rainStatus);
-      }
+      const rainStatusArray = rainStatus.split(',');
+      let filteredReports = reports;
+      filteredReports = reports.filter(report => rainStatusArray.includes(report.rainStatus));
+      reports = filteredReports;
     }
     if (sort) {
       const [sortBy, sortOrder] = sort.split(',');
@@ -29,6 +29,14 @@ router.get('/', async (req, res) => {
         );
       }
     }
+
+    res.status(200).json(reports);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
     res.status(200).json(reports);
   } catch (error) {
     console.error(error.message);
