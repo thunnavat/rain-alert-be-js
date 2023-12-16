@@ -1,36 +1,52 @@
-const { get } = require('mongoose')
 const RainReport = require('../models/report')
 
-const getReports = async () => {
+const getReports = async (req, res) => {
   try {
-    const result = await RainReport.find().populate({
-      path: 'reportDistrict',
-      options: { sort: { districtName: 1 } },
-    })
-    // Sort the result array by rainStatus
-    result.sort((a, b) => {
-      const statusOrder = {
-        'heavy rain': 0,
-        'moderate rain': 1,
-        'light rain': 2,
-        'no rain': 3,
-      }
-      return (
-        statusOrder[a.rainStatus] - statusOrder[b.rainStatus] ||
-        a.reportDistrict.districtName.localeCompare(
-          b.reportDistrict.districtName
+    const { specificTime, sort, rainStatus } = req.query
+    let reports
+
+    if (specificTime) {
+      reports = await getReportsBySpecificTime(specificTime)
+    } else {
+      reports = await RainReport.find().populate({
+        path: 'reportDistrict',
+        options: { sort: { districtName: 1 } },
+      })
+    }
+    if (rainStatus) {
+      if (rainStatus.toLowerCase() !== 'all') {
+        const rainStatusArray = rainStatus.split(',')
+        let filteredReports = reports
+        filteredReports = reports.filter((report) =>
+          rainStatusArray.includes(report.rainStatus)
         )
-      )
-    })
-    return result
+        reports = filteredReports
+      }
+    }
+    if (sort) {
+      const [sortBy, sortOrder] = sort.split(',')
+      if (sortBy === 'distinctname' && sortOrder === 'asc') {
+        reports.sort((a, b) =>
+          a.reportDistrict.districtName.localeCompare(
+            b.reportDistrict.districtName
+          )
+        )
+      } else if (sortBy === 'distinctname' && sortOrder === 'desc') {
+        reports.sort((a, b) =>
+          b.reportDistrict.districtName.localeCompare(
+            a.reportDistrict.districtName
+          )
+        )
+      }
+    }
+    res.status(200).json(reports)
   } catch (error) {
-    res.status(201)
-    console.error(error.message)
+    res.status(500).json({ message: error.message })
     throw error
   }
 }
 
-const getUniqueTimeReports = async () => {
+const getUniqueTimeReports = async (req, res) => {
   try {
     const result = await RainReport.aggregate([
       {
@@ -51,11 +67,13 @@ const getUniqueTimeReports = async () => {
       { $sort: { reportTime: -1 } }, // ถ้าคุณต้องการเรียงลำดับล่าสุดขึ้นก่อน
     ])
 
-    return result.map((report) => ({
-      reportTime: report.reportTime,
-    }))
+    res.status(200).json(
+      result.map((report) => ({
+        reportTime: report.reportTime,
+      }))
+    )
   } catch (error) {
-    console.error(error.message)
+    res.status(500).json({ message: error.message })
     throw error
   }
 }
@@ -97,6 +115,21 @@ const getReportsBySpecificTime = async (specificTime) => {
     }).populate({
       path: 'reportDistrict',
       options: { sort: { districtName: 1 } },
+    })
+    // Sort the result array by rainStatus
+    result.sort((a, b) => {
+      const statusOrder = {
+        'heavy rain': 0,
+        'moderate rain': 1,
+        'light rain': 2,
+        'no rain': 3,
+      }
+      return (
+        statusOrder[a.rainStatus] - statusOrder[b.rainStatus] ||
+        a.reportDistrict.districtName.localeCompare(
+          b.reportDistrict.districtName
+        )
+      )
     })
     return result
   } catch (error) {

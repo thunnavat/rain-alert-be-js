@@ -14,7 +14,9 @@ app.listen(8080, () => {
 })
 
 mongoose
-  .connect('mongodb://admin:111111@database:27017/rainalert?directConnection=true') 
+  .connect(
+    'mongodb://admin:111111@database:27017/rainalert?directConnection=true'
+  )
   .then(() => {
     console.log('connect to MongoDB')
   })
