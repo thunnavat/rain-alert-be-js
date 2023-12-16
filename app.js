@@ -6,8 +6,8 @@ const reportRoute = require('./route/reportRoute')
 const app = express()
 
 app.use(express.json())
-app.use('/api/district', districtRoute)
-app.use('/api/report', reportRoute)
+app.use('/api/districts', districtRoute)
+app.use('/api/reports', reportRoute)
 
 app.listen(8080, () => {
   console.log('Server is running on port 8080')
