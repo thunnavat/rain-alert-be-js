@@ -13,6 +13,7 @@ const getReports = async (req, res) => {
         options: { sort: { districtName: 1 } },
       })
     }
+
     if (rainStatus) {
       if (rainStatus.toLowerCase() !== 'all') {
         const rainStatusArray = rainStatus.split(',')
@@ -23,6 +24,7 @@ const getReports = async (req, res) => {
         reports = filteredReports
       }
     }
+
     if (sort) {
       const [sortBy, sortOrder] = sort.split(',')
       if (sortBy === 'distinctname' && sortOrder === 'asc') {
@@ -39,14 +41,23 @@ const getReports = async (req, res) => {
         )
       }
     }
+
+    // ถ้าไม่มีรายงานที่พบ
+    if (!reports || reports.length === 0) {
+      res.status(404).json({ message: 'ไม่พบรายงาน' })
+      return
+    }
+
     res.status(200).json(reports)
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    // จัดการข้อผิดพลาดและส่งคำตอบกลับ
+    console.error(error.message)
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลรายงาน' })
     throw error
   }
 }
 
-const getUniqueTimeReports = async (req, res) => {
+const getUniqueTimeFromReports = async (req, res) => {
   try {
     const result = await RainReport.aggregate([
       {
@@ -64,9 +75,13 @@ const getUniqueTimeReports = async (req, res) => {
       {
         $replaceRoot: { newRoot: '$doc' },
       },
-      { $sort: { reportTime: -1 } }, // ถ้าคุณต้องการเรียงลำดับล่าสุดขึ้นก่อน
+      { $sort: { reportTime: -1 } }, // เรียงลำดับล่าสุดขึ้นก่อน
     ])
-
+    // ตรวจสอบว่ามีข้อมูลหรือไม่
+    if (result.length === 0) {
+      res.status(404).json({ message: 'ไม่พบข้อมูลรายงาน' })
+      return
+    }
     res.status(200).json(
       result.map((report) => ({
         reportTime: report.reportTime,
@@ -138,4 +153,4 @@ const getReportsBySpecificTime = async (specificTime) => {
   }
 }
 
-module.exports = { getReports, getUniqueTimeReports, getReportsBySpecificTime }
+module.exports = { getReports, getUniqueTimeFromReports, getReportsBySpecificTime }
