@@ -10,7 +10,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  type: {
+  displayName: {
+    type: String,
+    required: false,
+  },
+  picture: {
+    type: String,
+    required: false,
+  },
+  registerType: {
     type: String,
     enum: ['LINE', 'WEB'], // กำหนดให้ type เป็นค่าเฉพาะ 'line' หรือ 'web'
     required: true
