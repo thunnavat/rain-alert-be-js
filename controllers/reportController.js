@@ -42,7 +42,6 @@ const getReports = async (req, res) => {
       }
     }
 
-    // ถ้าไม่มีรายงานที่พบ
     if (!reports || reports.length === 0) {
       res.status(404).json({ message: 'ไม่พบรายงาน' })
       return
@@ -50,7 +49,6 @@ const getReports = async (req, res) => {
 
     res.status(200).json(reports)
   } catch (error) {
-    // จัดการข้อผิดพลาดและส่งคำตอบกลับ
     console.error(error.message)
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลรายงาน' })
     throw error
@@ -75,9 +73,9 @@ const getUniqueTimeFromReports = async (req, res) => {
       {
         $replaceRoot: { newRoot: '$doc' },
       },
-      { $sort: { reportTime: -1 } }, // เรียงลำดับล่าสุดขึ้นก่อน
+      { $sort: { reportTime: -1 } },
     ])
-    // ตรวจสอบว่ามีข้อมูลหรือไม่
+
     if (result.length === 0) {
       res.status(404).json({ message: 'ไม่พบข้อมูลรายงาน' })
       return
@@ -95,21 +93,16 @@ const getUniqueTimeFromReports = async (req, res) => {
 
 const getReportsBySpecificTime = async (specificTime) => {
   try {
-    // Validate the specificTime format
     if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(\.\d{1,3})?Z?$/.test(specificTime)) {
       throw new Error('Invalid date format for specificTime')
     }
-    // Add seconds to the specificTime if it doesn't exist
     const formattedTime = specificTime.includes(':')
       ? specificTime
       : specificTime + ':00'
-    // Convert the specificTime to Date object
     const time = new Date(formattedTime)
-    // Validate if the conversion is successful
     if (isNaN(time.getTime())) {
       throw new Error('Invalid date for specificTime')
     }
-    // Use the time to fetch data
     const result = await RainReport.find({
       reportTime: {
         $gte: new Date(
@@ -131,7 +124,6 @@ const getReportsBySpecificTime = async (specificTime) => {
       path: 'reportDistrict',
       options: { sort: { districtName: 1 } },
     })
-    // Sort the result array by rainStatus
     result.sort((a, b) => {
       const statusOrder = {
         'heavy rain': 0,
@@ -153,4 +145,8 @@ const getReportsBySpecificTime = async (specificTime) => {
   }
 }
 
-module.exports = { getReports, getUniqueTimeFromReports, getReportsBySpecificTime }
+module.exports = {
+  getReports,
+  getUniqueTimeFromReports,
+  getReportsBySpecificTime,
+}

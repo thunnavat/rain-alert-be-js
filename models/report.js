@@ -17,4 +17,4 @@ const rainreportSchema = new mongoose.Schema({
 
 const RainReport = mongoose.model('RainReport', rainreportSchema)
 
-module.exports = RainReport // Export RainReport model
+module.exports = RainReport

@@ -11,4 +11,4 @@ const districtSchema = new mongoose.Schema(
 
 const District = mongoose.model('District', districtSchema)
 
-module.exports = District // Export District model
+module.exports = District 

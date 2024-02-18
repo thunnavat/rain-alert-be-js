@@ -7,19 +7,20 @@ const login = async (req, res) => {
   try {
     const { username, password, registerType, channelId } = req.body
     if (registerType === 'WEB') {
-      // Check if username exists
       const user = await User.findOne({ username })
       if (!user) {
-        return res.status(401).json({ message: 'Invalid username or password' })
+        return res
+          .status(401)
+          .json({ message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' })
       }
 
-      // Check if password is correct
       const passwordMatch = await bcrypt.compare(password, user.password)
       if (!passwordMatch) {
-        return res.status(401).json({ message: 'Invalid username or password' })
+        return res
+          .status(401)
+          .json({ message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' })
       }
 
-      // Generate access token
       const accessToken = jwt.sign(
         {
           userId: user._id,
@@ -34,7 +35,6 @@ const login = async (req, res) => {
         }
       )
 
-      // Generate refresh token
       const refreshToken = jwt.sign(
         { userId: user._id },
         config.refreshSecretKey,
@@ -45,12 +45,14 @@ const login = async (req, res) => {
     } else if (registerType === 'LINE') {
       const user = await User.findOne({ username })
       if (!user) {
-        return res.status(401).json({ message: 'Invalid username or password' })
+        return res
+          .status(401)
+          .json({ message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' })
       }
       if (channelId !== '2003424448') {
-        return res.status(401).json({ message: 'Invalid channelId' })
+        return res.status(401).json({ message: 'channelId ไม่ถูกต้อง' })
       }
-      // Generate access token
+
       const accessToken = jwt.sign(
         { userId: user._id },
         config.accessSecretKey,
@@ -59,7 +61,6 @@ const login = async (req, res) => {
         }
       )
 
-      // Generate refresh token
       const refreshToken = jwt.sign(
         { userId: user._id },
         config.refreshSecretKey,
@@ -70,25 +71,25 @@ const login = async (req, res) => {
     }
   } catch (error) {
     console.error(error)
-    return res.status(500).json({ message: 'Internal server error' })
+    return res.status(500).json({ message: 'ข้อผิดพลาดเซิร์ฟเวอร์ภายใน' })
   }
 }
 
 const verifyToken = (req, res, next) => {
-  const token =
-    req.body.token || req.query.token || req.header['x-access-token']
+  const authHeader = req.headers['authorization']
+  const token = req.body.token || req.query.token || req.header['x-access-token'] ||  authHeader && authHeader.split(' ')[1] 
 
   if (!token) {
-    return res.status(403).send('A token is required')
+    return res.status(403).send('จำเป็นต้องมีโทเค็น')
   }
 
   try {
     const decoded = jwt.verify(token, config.accessSecretKey)
     req.user = decoded
   } catch (err) {
-    return res.status(401).send('Invalid Token')
+    return res.status(401).send('โทเค็นไม่ถูกต้อง')
   }
   return next()
 }
 
-module.exports = { login , verifyToken }
+module.exports = { login, verifyToken }
