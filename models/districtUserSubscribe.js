@@ -18,4 +18,4 @@ const districtUserSubscribeSchema = new mongoose.Schema(
 
 const DistrictUserSubscribe = mongoose.model('DistrictUserSubscribe', districtUserSubscribeSchema)
 
-module.exports = DistrictUserSubscribe // Export District model
+module.exports = DistrictUserSubscribe 

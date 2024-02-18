@@ -50,4 +50,8 @@ const updateDistrictUserSubscribe = async (req, res) => {
   }
 }
 
-module.exports = { getDistrictSubscribeByUserId, addDistrictUserSubscribe, updateDistrictUserSubscribe }
+module.exports = {
+  getDistrictSubscribeByUserId,
+  addDistrictUserSubscribe,
+  updateDistrictUserSubscribe,
+}

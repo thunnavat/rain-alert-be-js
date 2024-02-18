@@ -24,14 +24,12 @@ const addDistricts = async (req, res) => {
 const getDistricts = async (req, res) => {
   try {
     const result = await District.find()
-    // ถ้าไม่พบเขต
     if (!result || result.length === 0) {
       res.status(404).json({ message: 'ไม่พบเขต' })
       return
     }
     res.status(200).json(result)
   } catch (error) {
-    // จัดการข้อผิดพลาดและส่งคำตอบกลับ
     console.error(error.message)
     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลเขต' })
     throw error
