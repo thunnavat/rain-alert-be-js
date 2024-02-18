@@ -4,7 +4,7 @@ const districtRoute = require('./routes/districtRoute')
 const reportRoute = require('./routes/reportRoute')
 const userRoute = require('./routes/userRoute')
 const authenRoute = require('./routes/authenRoute')
-const districtUserSubscribeRoute = require('./routes/districtUserSubscriptionRoute')
+const districtUserSubscribeRoute = require('./routes/districtUserSubscribeRoute')
 
 const app = express()
 
@@ -19,14 +19,12 @@ app.listen(8080, () => {
   console.log('Server is running on port 8080')
 })
 
-mongoose
-  .connect(
-    // 'mongodb://admin:111111@database:27017/rainalert?directConnection=true'
-    'mongodb://admin:111111@cp23tt3.sit.kmutt.ac.th:27017/rainalert'
-  )
-  .then(() => {
-    console.log('connect to MongoDB')
-  })
-  .catch((error) => {
-    console.log(error)
-  })
+  mongoose
+    .connect('mongodb://admin:111111@cp23tt3.sit.kmutt.ac.th:27017/rainalert')
+    .then(() => {
+      console.log('แอปพลิเคชันกำลังทำงานในโหมด Development')
+    })
+    .catch((error) => {
+      console.log(error)
+    })
+

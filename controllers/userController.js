@@ -8,26 +8,22 @@ const register = async (req, res) => {
     const { username, password, displayName, picture, registerType, role } =
       req.body
     if (registerType === 'WEB') {
-      // Check if username already exists
-      const user = await User.findOne
+      const user = await User.findOne({ username: username })
       if (user) {
         return res.status(400).json({ message: 'Username already exists' })
       }
 
-      // Hash password
       const hashedPassword = await bcrypt.hash(password, 10)
 
-      // Create new user
       const newUser = new User({
         username,
         password: hashedPassword,
+        displayName,
         registerType,
         role,
       })
 
-      // Save user to database
       await newUser.save()
-
       return res.status(201).json({ message: 'User created' })
     } else if (registerType === 'LINE') {
       const user = await User.findOne({ username: username })
@@ -63,17 +59,14 @@ const refreshToken = async (req, res) => {
       return res.status(401).json({ message: 'Refresh token is required' })
     }
 
-    // Verify refresh token
     const decoded = jwt.verify(refreshToken, config.refreshSecretKey)
 
-    // Create new access token
     const accessToken = jwt.sign(
       { userId: decoded.userId },
       config.accessSecretKey,
       { expiresIn: '15m' }
     )
 
-    // Send new access token
     res.json({ accessToken })
   } catch (error) {
     console.error(error)
