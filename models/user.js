@@ -1,9 +1,14 @@
 const mongoose = require('mongoose')
 
 const userSchema = new mongoose.Schema({
-  username: {
+  email: {
     type: String,
-    required: true,
+    required: false,
+    unique: true,
+  },
+  lineId: {
+    type: String,
+    required: false,
     unique: true,
   },
   password: {
@@ -20,14 +25,18 @@ const userSchema = new mongoose.Schema({
   },
   registerType: {
     type: String,
-    enum: ['LINE', 'WEB'], 
-    required: true
+    enum: ['LINE', 'WEB'],
+    required: true,
   },
   role: {
     type: String,
-    enum: ['ADMIN', 'USER'], 
-    default:'USER',
-    required: true
+    enum: ['ADMIN', 'USER'],
+    default: 'USER',
+    required: true,
+  },
+  resetLink:{
+    type: String,
+    default: ''
   }
 })
 

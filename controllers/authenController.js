@@ -1,13 +1,16 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const _ = require('lodash')
 const User = require('../models/user.js')
 const config = require('../config/config.js')
+const sendEmail = require('../middleware/sendEmail.js')
+require('dotenv').config()
 
 const login = async (req, res) => {
   try {
-    const { username, password, registerType, channelId } = req.body
+    const { email, lineId, password, registerType, channelId } = req.body
     if (registerType === 'WEB') {
-      const user = await User.findOne({ username })
+      const user = await User.findOne({ email })
       if (!user) {
         return res
           .status(401)
@@ -43,7 +46,7 @@ const login = async (req, res) => {
 
       return res.json({ accessToken, refreshToken })
     } else if (registerType === 'LINE') {
-      const user = await User.findOne({ username })
+      const user = await User.findOne({ lineId })
       if (!user) {
         return res
           .status(401)
@@ -77,7 +80,11 @@ const login = async (req, res) => {
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers['authorization']
-  const token = req.body.token || req.query.token || req.header['x-access-token'] ||  authHeader && authHeader.split(' ')[1] 
+  const token =
+    req.body.token ||
+    req.query.token ||
+    req.header['x-access-token'] ||
+    (authHeader && authHeader.split(' ')[1])
 
   if (!token) {
     return res.status(403).send('จำเป็นต้องมีโทเค็น')
@@ -92,4 +99,51 @@ const verifyToken = (req, res, next) => {
   return next()
 }
 
-module.exports = { login, verifyToken }
+const forgotPassword = async (req, res) => {
+  const { email } = req.body
+
+  try {
+    const user = await User.findOne({ email })
+
+    if (!user) {
+      return res.status(400).json({ message: 'ไม่มีอีเมลอยู่ในระบบ' })
+    }
+
+    const token = jwt.sign({ userId: user._id }, config.accessSecretKey)
+    await user.updateOne({ resetLink: token })
+
+    const resetPasswordUrl = `${process.env.URL}/auth/forget-password/${token}`
+    await sendEmail(email, 'Reset Password', resetPasswordUrl)
+
+    return res.status(200).json({ message: 'ส่งอีเมลไปยังบัญชีคุณแล้ว' })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการลืมรหัสผ่าน' })
+  }
+}
+
+const resetPassword = async (req, res) => {
+  const { resetLink, newPass } = req.body;
+  if (resetLink) {
+    try {
+      const decodedData = jwt.verify(resetLink, config.accessSecretKey);
+      const user = await User.findOne({ resetLink });
+
+      if (!user) {
+        return res.status(400).json({ message: 'ไม่มีผู้ใช้ที่มีโทเคนนี้อยู่' });
+      }
+
+      user.password = newPass;
+      user.resetLink = ''; 
+      await user.save();
+
+      return res.status(200).json({ message: 'เปลี่ยนรหัสผ่านสำเร็จแล้ว' });
+    } catch (error) {
+      return res.status(401).json({ message: 'โทเคนผิดหรือหมดอายุ' });
+    }
+  } else {
+    return res.status(400).json({ message: 'โทเคนไม่ถูกต้อง' });
+  }
+};
+
+module.exports = { login, verifyToken, forgotPassword, resetPassword }
