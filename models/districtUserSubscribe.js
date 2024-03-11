@@ -8,7 +8,7 @@ const districtUserSubscribeSchema = new mongoose.Schema(
       required: true,
     },
     districtSubscribe: {
-      type: [String],
+      type: [],
       required: true,
     },
   },

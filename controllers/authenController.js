@@ -10,7 +10,7 @@ const login = async (req, res) => {
   try {
     const { email, lineId, password, registerType, channelId } = req.body
     if (registerType === 'WEB') {
-      const user = await User.findOne({ email })
+      const user = await User.findOne({ email: email })
       if (!user) {
         return res
           .status(401)
@@ -27,7 +27,7 @@ const login = async (req, res) => {
       const accessToken = jwt.sign(
         {
           userId: user._id,
-          username: user.username,
+          email: user.email,
           displayName: user.displayName,
           picture: user.picture,
           role: user.role,
@@ -46,7 +46,7 @@ const login = async (req, res) => {
 
       return res.json({ accessToken, refreshToken })
     } else if (registerType === 'LINE') {
-      const user = await User.findOne({ lineId })
+      const user = await User.findOne({ lineId: lineId })
       if (!user) {
         return res
           .status(401)
@@ -57,7 +57,13 @@ const login = async (req, res) => {
       }
 
       const accessToken = jwt.sign(
-        { userId: user._id },
+        {
+          userId: user._id,
+          lineId: user.lineId,
+          displayName: user.displayName,
+          picture: user.picture,
+          role: user.role,
+        },
         config.accessSecretKey,
         {
           expiresIn: '15m',

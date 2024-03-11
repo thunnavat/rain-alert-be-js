@@ -9,7 +9,7 @@ const getDistrictSubscribeByUserId = async (req, res) => {
     res.status(200).json(districtUserSubscribe.districtSubscribe)
   } catch (error) {
     console.error(error.message)
-    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลเขต' })
+    res.status(500).json({ message: error.message })
     throw error
   }
 }
@@ -42,7 +42,7 @@ const updateDistrictUserSubscribe = async (req, res) => {
     res.status(200).json(districtUserSubscribe.districtSubscribe)
   } catch (error) {
     console.error(error.message)
-    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเพิ่มข้อมูลเขต' })
+    res.status(400).json({ message: error.message })
     throw error
   }
 }
