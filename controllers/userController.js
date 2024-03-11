@@ -7,6 +7,7 @@ const DistrictUserSubscribe = require('../models/districtUserSubscribe')
 // const sendEmail = require('../middleware/sendEmail.js')
 
 
+
 const register = async (req, res) => {
   try {
     const { email, password, displayName, picture, registerType, role, lineId } =
