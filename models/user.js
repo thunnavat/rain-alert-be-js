@@ -5,12 +5,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: false,
     unique: true,
+    sparse: true 
   },
   lineId: {
     type: String,
     required: false,
     unique: true,
-    sparse: true, 
+    sparse: true
   },
   password: {
     type: String,

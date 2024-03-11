@@ -2,22 +2,26 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const User = require('../models/user.js')
 const config = require('../config/config.js')
+const DistrictUserSubscribe = require('../models/districtUserSubscribe')
 // const Token = require('../models/token.js')
 // const sendEmail = require('../middleware/sendEmail.js')
+
 
 const register = async (req, res) => {
   try {
     const { email, password, displayName, picture, registerType, role, lineId } =
       req.body
 
-    if (!email || !password || !displayName || !registerType) {
-      return res.status(400).json({ message: 'ข้อมูลที่ต้องการไม่ครบ' })
-    }
-
     if (registerType === 'WEB') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !password || !displayName || !registerType) {
+        return res.status(400).json({ message: 'ข้อมูลที่ต้องการไม่ครบ' })
+      }
       const user = await User.findOne({ email: email })
       if (user) {
         return res.status(400).json({ message: 'อีเมลมีอยู่ในระบบแล้ว' })
+      } else if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: 'รูปแบบอีเมลไม่ถูกต้อง' })
       }
 
       const hashedPassword = await bcrypt.hash(password, 10)
@@ -28,7 +32,15 @@ const register = async (req, res) => {
         registerType,
         role,
       })
-      await newUser.save(); 
+      await newUser.save();
+      const insUser =  await User.findOne({ email: email })
+      const userId = insUser._id
+      const newDistrictUserSubscribe = new DistrictUserSubscribe({
+        userId: userId,
+        districtSubscribe: [],
+      })
+      await newDistrictUserSubscribe.save()
+
 
       // const token = new Token({
       //   userId: newUser._id,
@@ -46,23 +58,35 @@ const register = async (req, res) => {
     } else if (registerType === 'LINE') {
       const existingUser = await User.findOne({ lineId: lineId })
       if (existingUser) {
-        return res.status(400).json({ message: 'LINE ID มีอยู่ในระบบแล้ว' });
-      }
-
-      const newUser = new User({
-        lineId,
-        displayName,
-        picture,
-        registerType,
-        role,
-      })
-      await newUser.save()
+        existingUser.displayName = displayName
+        existingUser.picture = picture
+        await existingUser.save()
+        return res.status(200).json({ message: 'อัปเดทข้อมูลสำเร็จ' })
+      } else {
+        const newUser = new User({
+          lineId,
+          displayName,
+          picture,
+          registerType,
+          role,
+        })
+        await newUser.save()
+        const insUser =  await User.findOne({ lineId: lineId })
+        const userId = insUser._id
+        const newDistrictUserSubscribe = new DistrictUserSubscribe({
+          userId: userId,
+          districtSubscribe: [],
+        })
+        await newDistrictUserSubscribe.save()
+        return res.status(200).json({ message: 'สร้างบัญชีสำเร็จ' })
+      }      
     } else {
       return res.status(400).json({ message: 'ประเภทการลงทะเบียนไม่ถูกต้อง' })
     }
   } catch (error) {
     console.error(error)
-    return res.status(500).json({ message: 'ข้อผิดพลาดเซิร์ฟเวอร์ภายใน' })
+    // return res.status(500).json({ message: 'ข้อผิดพลาดเซิร์ฟเวอร์ภายใน' })
+    return res.status(500).json({ error })
   }
 }
 
