@@ -2,10 +2,8 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const User = require('../models/user.js')
 const config = require('../config/config.js')
-const DistrictUserSubscribe = require('../models/districtUserSubscribe')
 // const Token = require('../models/token.js')
-// const sendEmail = require('../middleware/sendEmail.js')
-
+// const sendEmail = require('../middleware/sendEmail.js'
 
 const register = async (req, res) => {
   try {
