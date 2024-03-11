@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken')
 const User = require('../models/user.js')
 const config = require('../config/config.js')
 // const Token = require('../models/token.js')
-// const sendEmail = require('../middleware/sendEmail.js')
+// const sendEmail = require('../middleware/sendEmail.js'
 
 const register = async (req, res) => {
   try {
@@ -28,7 +28,15 @@ const register = async (req, res) => {
         registerType,
         role,
       })
-      await newUser.save(); 
+      await newUser.save();
+      const insUser =  await User.findOne({ email: email })
+      const userId = insUser._id
+      const newDistrictUserSubscribe = new DistrictUserSubscribe({
+        userId: userId,
+        districtSubscribe: [],
+      })
+      await newDistrictUserSubscribe.save()
+
 
       // const token = new Token({
       //   userId: newUser._id,

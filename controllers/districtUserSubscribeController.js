@@ -6,9 +6,6 @@ const getDistrictSubscribeByUserId = async (req, res) => {
     const districtUserSubscribe = await DistrictUserSubscribe.findOne({
       userId: userId,
     })
-    if (!districtUserSubscribe) {
-      return
-    }
     res.status(200).json(districtUserSubscribe.districtSubscribe)
   } catch (error) {
     console.error(error.message)
@@ -17,21 +14,21 @@ const getDistrictSubscribeByUserId = async (req, res) => {
   }
 }
 
-const addDistrictUserSubscribe = async (req, res) => {
-  try {
-    const { userId, districtSubscribeData } = req.body
-    const districtUserSubscribe = new DistrictUserSubscribe({
-      userId: userId,
-      districtSubscribe: districtSubscribeData,
-    })
-    await districtUserSubscribe.save()
-    res.status(201).json(districtUserSubscribe.districtSubscribe)
-  } catch (error) {
-    console.error(error.message)
-    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเพิ่มข้อมูลเขต' })
-    throw error
-  }
-}
+// const addDistrictUserSubscribe = async (req, res) => {
+//   try {
+//     const { userId, districtSubscribeData } = req.body
+//     const districtUserSubscribe = new DistrictUserSubscribe({
+//       userId: userId,
+//       districtSubscribe: districtSubscribeData,
+//     })
+//     await districtUserSubscribe.save()
+//     res.status(201).json(districtUserSubscribe.districtSubscribe)
+//   } catch (error) {
+//     console.error(error.message)
+//     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเพิ่มข้อมูลเขต' })
+//     throw error
+//   }
+// }
 
 const updateDistrictUserSubscribe = async (req, res) => {
   try {
@@ -52,6 +49,5 @@ const updateDistrictUserSubscribe = async (req, res) => {
 
 module.exports = {
   getDistrictSubscribeByUserId,
-  addDistrictUserSubscribe,
   updateDistrictUserSubscribe,
 }
