@@ -4,7 +4,6 @@ const districtUserSubscribeController = require('../controllers/districtUserSubs
 const AuthenController = require('../controllers/authenController') 
 
 router.get('/:userId', AuthenController.verifyToken, districtUserSubscribeController.getDistrictSubscribeByUserId)
-router.post('/', AuthenController.verifyToken, districtUserSubscribeController.addDistrictUserSubscribe)
 router.put('/:userId', AuthenController.verifyToken, districtUserSubscribeController.updateDistrictUserSubscribe)
 
 module.exports = router
