@@ -124,7 +124,7 @@ const forgotPassword = async (req, res) => {
     return res.status(200).json({ message: 'ส่งอีเมลไปยังบัญชีคุณแล้ว' })
   } catch (error) {
     console.error(error)
-    return res.status(500).json({ message: 'เกิดข้อผิดพลาด' })
+    return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการลืมรหัสผ่าน' })
   }
 }
 
@@ -132,15 +132,14 @@ const resetPassword = async (req, res) => {
   const { resetLink, newPass } = req.body;
   if (resetLink) {
     try {
-      const decodedData = jwt.verify(resetLink, config.resetPasswordSecretKey);
+      const decodedData = jwt.verify(resetLink, config.accessSecretKey);
       const user = await User.findOne({ resetLink });
 
       if (!user) {
         return res.status(400).json({ message: 'ไม่มีผู้ใช้ที่มีโทเคนนี้อยู่' });
       }
 
-      const hashedPassword = await bcrypt.hash(newPass, 10);
-      user.password = hashedPassword;
+      user.password = newPass;
       user.resetLink = ''; 
       await user.save();
 
