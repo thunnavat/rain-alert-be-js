@@ -3,45 +3,85 @@ const jwt = require('jsonwebtoken')
 const User = require('../models/user.js')
 const config = require('../config/config.js')
 const DistrictUserSubscribe = require('../models/districtUserSubscribe')
+const {
+  getStorage,
+  ref,
+  getDownloadURL,
+  uploadBytesResumable,
+} = require('firebase/storage')
 // const Token = require('../models/token.js')
 // const sendEmail = require('../middleware/sendEmail.js')
 
-
-
 const register = async (req, res) => {
   try {
-    const { email, password, displayName, picture, registerType, role, lineId } =
-      req.body
-
+    const {
+      email,
+      password,
+      displayName,
+      picture,
+      registerType,
+      role,
+      lineId,
+    } = req.body
     if (registerType === 'WEB') {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!email || !password || !displayName || !registerType) {
         return res.status(400).json({ message: 'ข้อมูลที่ต้องการไม่ครบ' })
       }
-      const user = await User.findOne({ email: email })
-      if (user) {
-        return res.status(400).json({ message: 'อีเมลมีอยู่ในระบบแล้ว' })
-      } else if (!emailRegex.test(email)) {
+
+      if (!emailRegex.test(email)) {
         return res.status(400).json({ message: 'รูปแบบอีเมลไม่ถูกต้อง' })
       }
 
+      const user = await User.findOne({ email: email })
+      if (user) {
+        return res.status(400).json({ message: 'อีเมลมีอยู่ในระบบแล้ว' })
+      }
+
       const hashedPassword = await bcrypt.hash(password, 10)
+
+      // สร้าง URL สำหรับดาวน์โหลดรูปภาพ
+      const storage = getStorage()
+      const storageRef = ref(storage, `profiles/${email}/profile`)
+      const metadata = {
+        contentType: req.file.mimetype,
+      }
+      const snapshot = await uploadBytesResumable(
+        storageRef,
+        req.file.buffer,
+        metadata
+      )
+      const pictureURL = await getDownloadURL(snapshot.ref)
+      const picture = pictureURL
+
+      const allowedFileExtensions = ['jpg', 'jpeg', 'png', 'gif'] 
+
+      const fileExtension = req.file.originalname.split('.').pop().toLowerCase() 
+      if (!allowedFileExtensions.includes(fileExtension)) {
+        return res.status(400).json({ message: 'นามสกุลของไฟล์รูปภาพไม่ถูกต้อง' })
+      }
+
+      // สร้างผู้ใช้ใหม่พร้อมกับ URL ของรูปภาพ
       const newUser = new User({
         email,
         password: hashedPassword,
         displayName,
+        picture,
         registerType,
         role,
       })
-      await newUser.save();
-      const insUser =  await User.findOne({ email: email })
+      await newUser.save()
+      const insUser = await User.findOne({ email: email })
       const userId = insUser._id
       const newDistrictUserSubscribe = new DistrictUserSubscribe({
         userId: userId,
         districtSubscribe: [],
       })
       await newDistrictUserSubscribe.save()
+      console.log(picture)
+      return res.status(200).json({ message: 'สร้างบัญชีสำเร็จ' })
 
+      // โค้ดสำหรับการลงทะเบียนผู้ใช้จาก LINE
 
       // const token = new Token({
       //   userId: newUser._id,
@@ -49,13 +89,9 @@ const register = async (req, res) => {
       // });
       // await token.save();
 
-  
       // const url = `http://localhost:8080/api/users/verify/${newUser._id}/${token.token}`; // แก้เป็น email และใช้ http แทน localhost
 
       // await sendEmail(email, "โปรดยืนยัน Email ของคุณ", url)
-
-      return res.status(200).json({ message: 'สร้างบัญชีสำเร็จ' })
-
     } else if (registerType === 'LINE') {
       const existingUser = await User.findOne({ lineId: lineId })
       if (existingUser) {
@@ -72,7 +108,7 @@ const register = async (req, res) => {
           role,
         })
         await newUser.save()
-        const insUser =  await User.findOne({ lineId: lineId })
+        const insUser = await User.findOne({ lineId: lineId })
         const userId = insUser._id
         const newDistrictUserSubscribe = new DistrictUserSubscribe({
           userId: userId,
@@ -80,11 +116,13 @@ const register = async (req, res) => {
         })
         await newDistrictUserSubscribe.save()
         return res.status(200).json({ message: 'สร้างบัญชีสำเร็จ' })
-      }      
+      }
     } else {
+      console.log(req.body)
       return res.status(400).json({ message: 'ประเภทการลงทะเบียนไม่ถูกต้อง' })
     }
   } catch (error) {
+    console.log(req.body)
     console.error(error)
     // return res.status(500).json({ message: 'ข้อผิดพลาดเซิร์ฟเวอร์ภายใน' })
     return res.status(500).json({ error })
@@ -93,10 +131,9 @@ const register = async (req, res) => {
 
 // const verifyEmail = async (req, res) => {
 //   try {
-//     const userId = req.params.userId; 
+//     const userId = req.params.userId;
 
 //     const user = await User.findById(userId);
-
 
 //     if (!user) {
 //       return res.status(400).json({ message: 'ไม่พบผู้ใช้หรือลิงก์ไม่ถูกต้อง' });
@@ -104,7 +141,7 @@ const register = async (req, res) => {
 
 //     const token = req.params.token;
 
-//     const tokenData = await Token.findOne({ userId: user._id, token }); 
+//     const tokenData = await Token.findOne({ userId: user._id, token });
 //     if (!tokenData) {
 //       return res.status(400).json({ message: 'ลิงก์ไม่ถูกต้องหรือหมดอายุ' });
 //     }
@@ -112,7 +149,7 @@ const register = async (req, res) => {
 //     user.isEmailVerified = true;
 //     await user.save();
 
-//     await Token.findOneAndDelete({ userId: user._id, token }); 
+//     await Token.findOneAndDelete({ userId: user._id, token });
 
 //     return res.status(200).json({ message: 'ยืนยันอีเมลเรียบร้อยแล้ว' });
 //   } catch (error) {
@@ -163,4 +200,5 @@ const updateProfile = async (req, res) => {
   }
 }
 
-module.exports = { register,refreshToken, updateProfile }
+exports.up
+module.exports = { register, refreshToken, updateProfile }

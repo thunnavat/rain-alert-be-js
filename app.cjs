@@ -1,12 +1,24 @@
 const express = require('express')
 const mongoose = require('mongoose')
+const config = require('./config/config')
 const districtRoute = require('./routes/districtRoute')
 const reportRoute = require('./routes/reportRoute')
 const userRoute = require('./routes/userRoute')
 const authenRoute = require('./routes/authenRoute')
 const districtUserSubscribeRoute = require('./routes/districtUserSubscribeRoute')
 require('dotenv').config();
+const firebase = require('firebase/app')
 
+const firebaseConfig = {
+  apikey: config.apiKey,
+  authDomain: config.authDomain,
+  projectId: config.projectId,
+  storageBucket: config.storageBucket,
+  messagingSenderId: config.messagingSenderId,
+  appId: config.appId,
+  measurementId: config.measurementId
+};
+firebase.initializeApp(firebaseConfig);
 
 const app = express()
 
@@ -16,6 +28,7 @@ app.use('/api/reports', reportRoute)
 app.use('/api/users', userRoute)
 app.use('/api/login', authenRoute)
 app.use('/api/districtUserSubscribe', districtUserSubscribeRoute)
+
 
 app.listen(8080, () => {
   console.log('Server is running on port 8080')
