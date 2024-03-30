@@ -6,8 +6,18 @@ const reportRoute = require('./routes/reportRoute')
 const userRoute = require('./routes/userRoute')
 const authenRoute = require('./routes/authenRoute')
 const districtUserSubscribeRoute = require('./routes/districtUserSubscribeRoute')
+const bugReportRoute = require('./routes/bugReportRoute')
 require('dotenv').config();
 const firebase = require('firebase/app')
+
+const app = express()
+app.use(express.json())
+app.use('/api/districts', districtRoute)
+app.use('/api/reports', reportRoute)
+app.use('/api/users', userRoute)
+app.use('/api/login', authenRoute)
+app.use('/api/districtUserSubscribe', districtUserSubscribeRoute)
+app.use('/api/bugReport', bugReportRoute)
 
 const firebaseConfig = {
   apikey: config.apiKey,
@@ -19,15 +29,6 @@ const firebaseConfig = {
   measurementId: config.measurementId
 };
 firebase.initializeApp(firebaseConfig);
-
-const app = express()
-
-app.use(express.json())
-app.use('/api/districts', districtRoute)
-app.use('/api/reports', reportRoute)
-app.use('/api/users', userRoute)
-app.use('/api/login', authenRoute)
-app.use('/api/districtUserSubscribe', districtUserSubscribeRoute)
 
 
 app.listen(8080, () => {
