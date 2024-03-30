@@ -4,8 +4,8 @@ const AuthenController = require('../controllers/authenController')
 
 router.post('/', AuthenController.login)
 router.get('/profile', AuthenController.getProfile)
-// router.put('/forgot-password', AuthenController.forgotPassword)
-// router.put('/reset-password', AuthenController.resetPassword)
+router.post('/forgot-password', AuthenController.forgotPassword)
+router.put('/reset-password', AuthenController.resetPassword)
 
 
 module.exports = router

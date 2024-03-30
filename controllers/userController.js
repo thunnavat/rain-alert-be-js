@@ -12,6 +12,7 @@ const {
 // const Token = require('../models/token.js')
 // const sendEmail = require('../middleware/sendEmail.js')
 
+
 const register = async (req, res) => {
   try {
     const {
@@ -39,7 +40,7 @@ const register = async (req, res) => {
       }
 
       const hashedPassword = await bcrypt.hash(password, 10)
-      
+
       const storage = getStorage()
       const storageRef = ref(storage, `profiles/${email}/profile`)
       const metadata = {
@@ -53,11 +54,13 @@ const register = async (req, res) => {
       const pictureURL = await getDownloadURL(snapshot.ref)
       const picture = pictureURL
 
-      const allowedFileExtensions = ['jpg', 'jpeg', 'png', 'gif'] 
+      const allowedFileExtensions = ['jpg', 'jpeg', 'png', 'gif']
 
-      const fileExtension = req.file.originalname.split('.').pop().toLowerCase() 
+      const fileExtension = req.file.originalname.split('.').pop().toLowerCase()
       if (!allowedFileExtensions.includes(fileExtension)) {
-        return res.status(400).json({ message: 'นามสกุลของไฟล์รูปภาพไม่ถูกต้อง' })
+        return res
+          .status(400)
+          .json({ message: 'นามสกุลของไฟล์รูปภาพไม่ถูกต้อง' })
       }
 
       const newUser = new User({
@@ -181,22 +184,44 @@ const refreshToken = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { displayName, picture, districtSubscribe } = req.body
-    const userId = req.query.userId
-    const user = await User.findById(userId)
-    if (!user) {
-      return res.status(404).json({ message: 'ไม่เจอผู้ใช้' })
-    }
-    user.displayName = displayName
-    user.picture = picture
-    user.districtSubscribe = districtSubscribe
-    await user.save()
-    return res.status(200).json({ message: 'อัพเดตผู้ใช้สำเร็จ' })
-  } catch (error) {
-    console.error(error)
-    return res.status(500).json({ message: 'ข้อผิดพลาดเซิร์ฟเวอร์ภายใน' })
-  }
-}
+    const { userId, email } = req.user;
+    const { displayName } = req.body;
 
-exports.up
+    let user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(400).json({ message: 'ไม่พบผู้ใช้' });
+    }
+
+    if (displayName) {
+      user.displayName = displayName;
+    }
+
+    if (req.file) {
+      const storage = getStorage();
+      const storageRef = ref(storage, `profiles/${user.email}/profile`);
+      const metadata = {
+        contentType: req.file.mimetype,
+      };
+
+      const snapshot = await uploadBytesResumable(
+        storageRef,
+        req.file.buffer,
+        metadata
+      );
+
+      const pictureURL = await getDownloadURL(snapshot.ref);
+
+      user.picture = pictureURL;
+    }
+
+    await user.save();
+
+    res.status(200).json({ message: 'อัปเดตสำเร็จ' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'เกิดข้อผิดพลาด' });
+  }
+};
+
 module.exports = { register, refreshToken, updateProfile }

@@ -127,4 +127,52 @@ const verifyToken = (req, res, next) => {
   return next()
 }
 
-module.exports = { login, verifyToken, getProfile }
+const forgotPassword = async (req, res) => {
+  const { email } = req.body
+
+  try {
+    const user = await User.findOne({ email })
+
+    if (!user) {
+      return res.status(400).json({ message: 'ไม่มีอีเมลอยู่ในระบบ' })
+    }
+
+    const token = jwt.sign({ userId: user._id }, config.accessSecretKey)
+    await user.updateOne({ resetLink: token })
+
+    const resetPasswordUrl = `${process.env.URL}/auth/forget-password/${token}`
+    await sendEmail(email, 'Reset Password', resetPasswordUrl)
+
+    return res.status(200).json({ message: 'ส่งอีเมลไปยังบัญชีคุณแล้ว' })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({ message: 'เกิดข้อผิดพลาด' })
+  }
+}
+
+const resetPassword = async (req, res) => {
+  const { resetLink, newPass } = req.body;
+  if (resetLink) {
+    try {
+      const decoded = jwt.verify(resetLink, config.accessSecretKey);
+      const user = await User.findOne({ resetLink });
+
+      if (!user) {
+        return res.status(400).json({ message: 'ไม่มีผู้ใช้ที่มีโทเคนนี้อยู่' });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPass, 10);
+      user.password = hashedPassword;
+      user.resetLink = ''; 
+      await user.save();
+
+      return res.status(200).json({ message: 'เปลี่ยนรหัสผ่านสำเร็จแล้ว' });
+    } catch (error) {
+      return res.status(401).json({ message: 'โทเคนผิดหรือหมดอายุ' });
+    }
+  } else {
+    return res.status(400).json({ message: 'โทเคนไม่ถูกต้อง' });
+  }
+};
+
+module.exports = { login, verifyToken, getProfile, forgotPassword, resetPassword}
