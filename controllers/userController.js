@@ -39,8 +39,7 @@ const register = async (req, res) => {
       }
 
       const hashedPassword = await bcrypt.hash(password, 10)
-
-      // สร้าง URL สำหรับดาวน์โหลดรูปภาพ
+      
       const storage = getStorage()
       const storageRef = ref(storage, `profiles/${email}/profile`)
       const metadata = {
@@ -61,7 +60,6 @@ const register = async (req, res) => {
         return res.status(400).json({ message: 'นามสกุลของไฟล์รูปภาพไม่ถูกต้อง' })
       }
 
-      // สร้างผู้ใช้ใหม่พร้อมกับ URL ของรูปภาพ
       const newUser = new User({
         email,
         password: hashedPassword,
