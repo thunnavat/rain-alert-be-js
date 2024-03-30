@@ -3,7 +3,7 @@ const router = express.Router()
 const AuthenController = require('../controllers/authenController') 
 
 router.post('/', AuthenController.login)
-router.get('/profile/:userId', AuthenController.getProfile)
+router.get('/profile', AuthenController.getProfile)
 // router.put('/forgot-password', AuthenController.forgotPassword)
 // router.put('/reset-password', AuthenController.resetPassword)
 
