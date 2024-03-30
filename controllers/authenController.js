@@ -16,7 +16,6 @@ const login = async (req, res) => {
           .status(401)
           .json({ message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' })
       }
-
       const passwordMatch = await bcrypt.compare(password, user.password)
       if (!passwordMatch) {
         return res
@@ -27,9 +26,6 @@ const login = async (req, res) => {
       const accessToken = jwt.sign(
         {
           userId: user._id,
-          // email: user.email,
-          // displayName: user.displayName,
-          // picture: user.picture,
           role: user.role,
         },
         config.accessSecretKey,
@@ -84,6 +80,41 @@ const login = async (req, res) => {
   }
 }
 
+const getProfile = async (req, res) => {
+  try {
+    const accessToken = req.headers.authorization.split(' ')[1];
+    if (!accessToken) {
+      return res.status(401).json({ message: 'ไม่พบ Token' });
+    }
+
+    const decodedToken = jwt.verify(accessToken, config.accessSecretKey);
+    const userIdFromToken = decodedToken.userId;
+
+    const userIdFromParams = req.params.userId;
+    if (!userIdFromParams) {
+      return res.status(400).json({ message: 'ไม่พบ userId' });
+    }
+
+    if (userIdFromToken !== userIdFromParams) {
+      return res.status(401).json({ message: 'ไม่อนุญาตให้เข้าถึงข้อมูลผู้ใช้นี้' });
+    }
+
+    const user = await User.findById(userIdFromParams);
+    if (!user) {
+      return res.status(404).json({ message: 'ไม่พบข้อมูลผู้ใช้' });
+    }
+
+    return res.json({
+      email: user.email,
+      displayName: user.displayName,
+      picture: user.picture,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'ข้อผิดพลาดเซิร์ฟเวอร์ภายใน' });
+  }
+};
+
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers['authorization']
   const token =
@@ -105,52 +136,4 @@ const verifyToken = (req, res, next) => {
   return next()
 }
 
-const forgotPassword = async (req, res) => {
-  const { email } = req.body
-
-  try {
-    const user = await User.findOne({ email })
-
-    if (!user) {
-      return res.status(400).json({ message: 'ไม่มีอีเมลอยู่ในระบบ' })
-    }
-
-    const token = jwt.sign({ userId: user._id }, config.accessSecretKey)
-    await user.updateOne({ resetLink: token })
-
-    const resetPasswordUrl = `${process.env.URL}/auth/forget-password/${token}`
-    await sendEmail(email, 'Reset Password', resetPasswordUrl)
-
-    return res.status(200).json({ message: 'ส่งอีเมลไปยังบัญชีคุณแล้ว' })
-  } catch (error) {
-    console.error(error)
-    return res.status(500).json({ message: 'เกิดข้อผิดพลาด' })
-  }
-}
-
-const resetPassword = async (req, res) => {
-  const { resetLink, newPass } = req.body;
-  if (resetLink) {
-    try {
-      const decodedData = jwt.verify(resetLink, config.resetPasswordSecretKey);
-      const user = await User.findOne({ resetLink });
-
-      if (!user) {
-        return res.status(400).json({ message: 'ไม่มีผู้ใช้ที่มีโทเคนนี้อยู่' });
-      }
-
-      const hashedPassword = await bcrypt.hash(newPass, 10);
-      user.password = hashedPassword;
-      user.resetLink = ''; 
-      await user.save();
-
-      return res.status(200).json({ message: 'เปลี่ยนรหัสผ่านสำเร็จแล้ว' });
-    } catch (error) {
-      return res.status(401).json({ message: 'โทเคนผิดหรือหมดอายุ' });
-    }
-  } else {
-    return res.status(400).json({ message: 'โทเคนไม่ถูกต้อง' });
-  }
-};
-
-module.exports = { login, verifyToken, forgotPassword, resetPassword }
+module.exports = { login, verifyToken, getProfile }
