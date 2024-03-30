@@ -88,18 +88,9 @@ const getProfile = async (req, res) => {
     }
 
     const decodedToken = jwt.verify(accessToken, config.accessSecretKey);
-    const userIdFromToken = decodedToken.userId;
+    const userId = decodedToken.userId;
 
-    const userIdFromParams = req.params.userId;
-    if (!userIdFromParams) {
-      return res.status(400).json({ message: 'ไม่พบ userId' });
-    }
-
-    if (userIdFromToken !== userIdFromParams) {
-      return res.status(401).json({ message: 'ไม่อนุญาตให้เข้าถึงข้อมูลผู้ใช้นี้' });
-    }
-
-    const user = await User.findById(userIdFromParams);
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'ไม่พบข้อมูลผู้ใช้' });
     }
