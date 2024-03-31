@@ -82,17 +82,6 @@ const register = async (req, res) => {
       console.log(picture)
       return res.status(200).json({ message: 'สร้างบัญชีสำเร็จ' })
 
-      // โค้ดสำหรับการลงทะเบียนผู้ใช้จาก LINE
-
-      // const token = new Token({
-      //   userId: newUser._id,
-      //   token: jwt.sign({ userId: newUser._id }, config.accessSecretKey),
-      // });
-      // await token.save();
-
-      // const url = `http://localhost:8080/api/users/verify/${newUser._id}/${token.token}`; // แก้เป็น email และใช้ http แทน localhost
-
-      // await sendEmail(email, "โปรดยืนยัน Email ของคุณ", url)
     } else if (registerType === 'LINE') {
       const existingUser = await User.findOne({ lineId: lineId })
       if (existingUser) {
@@ -125,39 +114,9 @@ const register = async (req, res) => {
   } catch (error) {
     console.log(req.body)
     console.error(error)
-    // return res.status(500).json({ message: 'ข้อผิดพลาดเซิร์ฟเวอร์ภายใน' })
     return res.status(500).json({ error })
   }
 }
-
-// const verifyEmail = async (req, res) => {
-//   try {
-//     const userId = req.params.userId;
-
-//     const user = await User.findById(userId);
-
-//     if (!user) {
-//       return res.status(400).json({ message: 'ไม่พบผู้ใช้หรือลิงก์ไม่ถูกต้อง' });
-//     }
-
-//     const token = req.params.token;
-
-//     const tokenData = await Token.findOne({ userId: user._id, token });
-//     if (!tokenData) {
-//       return res.status(400).json({ message: 'ลิงก์ไม่ถูกต้องหรือหมดอายุ' });
-//     }
-
-//     user.isEmailVerified = true;
-//     await user.save();
-
-//     await Token.findOneAndDelete({ userId: user._id, token });
-
-//     return res.status(200).json({ message: 'ยืนยันอีเมลเรียบร้อยแล้ว' });
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการยืนยันอีเมล' });
-//   }
-// };
 
 const refreshToken = async (req, res) => {
   try {
@@ -229,7 +188,7 @@ const updateProfile = async (req, res) => {
     res.status(200).json({ message: 'อัปเดตสำเร็จ' });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'ข้อผิดพลาดเซิร์ฟเวอร์ภายใน' });
+    return res.status(500).json({ error });
   }
 };
 

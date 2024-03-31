@@ -86,7 +86,7 @@ const getUniqueTimeFromReports = async (req, res) => {
       }))
     )
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในดึงเวลาที่เป็นยูนีค'  })
     throw error
   }
 }
@@ -141,6 +141,7 @@ const getReportsBySpecificTime = async (specificTime) => {
     return result
   } catch (error) {
     console.error(error.message)
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในดึงข้อมูลเขตตามเวลา'  })
     throw error
   }
 }

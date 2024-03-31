@@ -9,26 +9,10 @@ const getDistrictSubscribeByUserId = async (req, res) => {
     res.status(200).json(districtUserSubscribe.districtSubscribe)
   } catch (error) {
     console.error(error.message)
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลการสมัครสมาชิกเขต' })
     throw error
   }
 }
-
-// const addDistrictUserSubscribe = async (req, res) => {
-//   try {
-//     const { userId, districtSubscribeData } = req.body
-//     const districtUserSubscribe = new DistrictUserSubscribe({
-//       userId: userId,
-//       districtSubscribe: districtSubscribeData,
-//     })
-//     await districtUserSubscribe.save()
-//     res.status(201).json(districtUserSubscribe.districtSubscribe)
-//   } catch (error) {
-//     console.error(error.message)
-//     res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเพิ่มข้อมูลเขต' })
-//     throw error
-//   }
-// }
 
 const updateDistrictUserSubscribe = async (req, res) => {
   try {
@@ -42,7 +26,7 @@ const updateDistrictUserSubscribe = async (req, res) => {
     res.status(200).json(districtUserSubscribe.districtSubscribe)
   } catch (error) {
     console.error(error.message)
-    res.status(400).json({ message: error.message })
+    res.status(400).json({ message: 'เกิดข้อผิดพลาดในการอัพเดตการสมัครสมาชิกเขต' })
     throw error
   }
 }

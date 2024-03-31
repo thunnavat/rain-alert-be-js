@@ -43,7 +43,7 @@ const createBugReport = async (req, res) => {
     const savedBugReport = await bugReport.save();
     res.status(201).json(savedBugReport);
   } catch (err) {
-    res.status(400).json({ message: err });
+    res.status(400).json({ message: 'เกิดข้อผิดพลาดในการรายงานบัค'});
   }
 };
 
