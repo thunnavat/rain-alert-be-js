@@ -197,6 +197,15 @@ const updateProfile = async (req, res) => {
       user.displayName = displayName;
     }
 
+    const allowedFileExtensions = ['jpg', 'jpeg', 'png', 'gif']
+
+    const fileExtension = req.file.originalname.split('.').pop().toLowerCase()
+    if (!allowedFileExtensions.includes(fileExtension)) {
+      return res
+        .status(400)
+        .json({ message: 'นามสกุลของไฟล์รูปภาพไม่ถูกต้อง' })
+    }
+
     if (req.file) {
       const storage = getStorage();
       const storageRef = ref(storage, `profiles/${user.email}/profile`);
@@ -220,7 +229,7 @@ const updateProfile = async (req, res) => {
     res.status(200).json({ message: 'อัปเดตสำเร็จ' });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'เกิดข้อผิดพลาด' });
+    return res.status(500).json({ message: 'ข้อผิดพลาดเซิร์ฟเวอร์ภายใน' });
   }
 };
 

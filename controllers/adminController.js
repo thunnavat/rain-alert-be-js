@@ -7,48 +7,48 @@ const isAdmin = (user) => {
 
 const updateRainStatus = async (req, res) => {
   try {
-    const { rainStatus, _id } = req.body; // เปลี่ยนจาก reportDistrict และ reportTime เป็น _id
+    const { rainStatus, _id } = req.body; 
 
-    // ตรวจสอบสิทธิ์การเข้าถึง
     if (!isAdmin(req.user)) {
-      return res.status(403).json({ message: 'Permission denied' });
+      return res.status(403).json({ message: 'ไม่มีสิทธิ์ในการเข้าถึง' });
     }
 
-    // ตรวจสอบว่า _id ถูกส่งมาหรือไม่
     if (!_id) {
-      return res.status(400).json({ message: 'Please provide _id' });
+      return res.status(400).json({ message: 'โปรดระบุ _id' });
     }
-    // ค้นหาหรือสร้างรายงานสถานการณ์ฝนสำหรับเขตนี้
+    if (!rainStatus) {
+      return res.status(400).json({ message: 'โปรดระบุ rain status' });
+    }
+  
     const report = await Report.findByIdAndUpdate(
-      _id, // ใช้ _id เป็นเงื่อนไขการค้นหา
-      { rainStatus }, // อัปเดต rain status
-      { new: true } // ตั้งค่าให้ส่งค่า report ที่ถูกอัปเดตกลับมา
+      _id, 
+      { rainStatus }, 
+      { new: true } 
     );
 
-    // ตรวจสอบว่าพบรายงานหรือไม่
     if (!report) {
-      return res.status(404).json({ message: 'Report not found' });
+      return res.status(404).json({ message: 'ไม่เจอรายงานฝน' });
     }
 
-    res.status(200).json({ message: 'Rain status updated successfully', report });
+    res.status(200).json({ message: 'อัพเดตสำเร็จ', report });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Failed to update rain status' });
+    res.status(500).json({ message: 'ข้อผิดพลาดเซิร์ฟเวอร์ภายใน' });
   }
 };
 
 const getBugReports = async (req, res) => {
   try {
-    // เช็คสิทธิ์การเข้าถึง ว่าเป็น admin หรือไม่
     if (!isAdmin(req.user)) {
-      return res.status(403).json({ message: 'Permission denied' });
+      return res.status(403).json({ message: 'ไม่มีสิทธิ์ในการเข้าถึง' });
     }
-    // ดึงรายการรายงานข้อผิดพลาดทั้งหมด
+   
     const bugReports = await BugReport.find();
     res.status(200).json(bugReports);
+
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Failed to fetch bug reports' });
+    res.status(500).json({ message: 'ข้อผิดพลาดเซิร์ฟเวอร์ภายใน' });
   }
 };
 
