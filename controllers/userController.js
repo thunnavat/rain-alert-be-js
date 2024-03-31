@@ -40,8 +40,17 @@ const register = async (req, res) => {
 
       const hashedPassword = await bcrypt.hash(password, 10)
 
+      const allowedFileExtensions = ['jpg', 'jpeg', 'png', 'gif']
+
+      const fileExtension = req.file.originalname.split('.').pop().toLowerCase()
+      if (!allowedFileExtensions.includes(fileExtension)) {
+        return res
+          .status(400)
+          .json({ message: 'นามสกุลของไฟล์รูปภาพไม่ถูกต้อง' })
+      }
+
       const storage = getStorage()
-      const storageRef = ref(storage, `profiles/${email}/profile`)
+      const storageRef = ref(storage, `profiles/${email}/profile.jpg`)
       const metadata = {
         contentType: req.file.mimetype,
       }
@@ -53,14 +62,6 @@ const register = async (req, res) => {
       const pictureURL = await getDownloadURL(snapshot.ref)
       const picture = pictureURL
 
-      const allowedFileExtensions = ['jpg', 'jpeg', 'png', 'gif']
-
-      const fileExtension = req.file.originalname.split('.').pop().toLowerCase()
-      if (!allowedFileExtensions.includes(fileExtension)) {
-        return res
-          .status(400)
-          .json({ message: 'นามสกุลของไฟล์รูปภาพไม่ถูกต้อง' })
-      }
 
       const newUser = new User({
         email,
@@ -173,7 +174,7 @@ const updateProfile = async (req, res) => {
 
     if (req.file) {
       const storage = getStorage()
-      const storageRef = ref(storage, `profiles/${user.email}/profile`)
+      const storageRef = ref(storage, `profiles/${user.email}/profile.jpg`)
       const metadata = {
         contentType: req.file.mimetype,
       }
@@ -198,4 +199,41 @@ const updateProfile = async (req, res) => {
   }
 }
 
-module.exports = { register, refreshToken, updateProfile }
+const changePassword = async (req, res) => {
+  try {
+    const { userId } = req.user;
+    const { currentPassword, newPassword, retypePassword } = req.body;
+
+    if (!currentPassword || !newPassword || !retypePassword) {
+      return res.status(400).json({ message: 'โปรดกรอกข้อมูลให้ครบทุกช่อง' });
+    }
+
+    if (newPassword !== retypePassword) {
+      return res.status(400).json({ message: 'รหัสผ่านใหม่และรหัสผ่านยืนยันไม่ตรงกัน' });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'ไม่พบผู้ใช้' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'รหัสผ่านปัจจุบันไม่ถูกต้อง' });
+    }
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+
+    await user.save();
+
+    res.status(200).json({ message: 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดเซิร์ฟเวอร์ภายใน' });
+  }
+};
+
+module.exports = { register, refreshToken, updateProfile, changePassword }
