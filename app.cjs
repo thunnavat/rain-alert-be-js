@@ -6,6 +6,7 @@ const reportRoute = require('./routes/reportRoute')
 const userRoute = require('./routes/userRoute')
 const authenRoute = require('./routes/authenRoute')
 const districtUserSubscribeRoute = require('./routes/districtUserSubscribeRoute')
+const adminRoute = require('./routes/adminRoute')
 const bugReportRoute = require('./routes/bugReportRoute')
 require('dotenv').config();
 const firebase = require('firebase/app')
@@ -17,6 +18,7 @@ app.use('/api/reports', reportRoute)
 app.use('/api/users', userRoute)
 app.use('/api/login', authenRoute)
 app.use('/api/districtUserSubscribe', districtUserSubscribeRoute)
+app.use('/api/admin', adminRoute)
 app.use('/api/bugReport', bugReportRoute)
 
 const firebaseConfig = {
