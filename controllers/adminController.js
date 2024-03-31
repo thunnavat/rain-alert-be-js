@@ -33,7 +33,7 @@ const updateRainStatus = async (req, res) => {
     res.status(200).json({ message: 'อัพเดตสำเร็จ', report });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'ข้อผิดพลาดเซิร์ฟเวอร์ภายใน' });
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการอัพเดตสถานะฝน' });
   }
 };
 
@@ -48,7 +48,7 @@ const getBugReports = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'ข้อผิดพลาดเซิร์ฟเวอร์ภายใน' });
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลบัค' });
   }
 };
 

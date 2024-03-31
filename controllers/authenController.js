@@ -76,7 +76,7 @@ const login = async (req, res) => {
     }
   } catch (error) {
     console.error(error)
-    return res.status(500).json({ message: 'ข้อผิดพลาดเซิร์ฟเวอร์ภายใน' })
+    return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ' })
   }
 }
 
@@ -115,7 +115,7 @@ const getProfile = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'ข้อผิดพลาดเซิร์ฟเวอร์ภายใน' });
+    return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลโปรไฟล์' });
   }
 };
 
@@ -153,13 +153,13 @@ const forgotPassword = async (req, res) => {
     const token = jwt.sign({ userId: user._id }, config.accessSecretKey)
     await user.updateOne({ resetLink: token })
 
-    const resetPasswordUrl = `${process.env.URL}/auth/forget-password/${token}`
+    const resetPasswordUrl = `${process.env.URL_FE}/auth/forget-password/${token}`
     await sendEmail(email, 'Reset Password', resetPasswordUrl)
 
     return res.status(200).json({ message: 'ส่งอีเมลไปยังบัญชีคุณแล้ว' })
   } catch (error) {
     console.error(error)
-    return res.status(500).json({ message: 'เกิดข้อผิดพลาด' })
+    return res.status(500).json({ error })
   }
 }
 
