@@ -82,18 +82,31 @@ const login = async (req, res) => {
 
 const getProfile = async (req, res) => {
   try {
-    const accessToken = req.headers.authorization.split(' ')[1];
-    if (!accessToken) {
-      return res.status(401).json({ message: 'ไม่พบ Token' });
+    const authorizationHeader = req.headers.authorization;
+    if (!authorizationHeader) {
+      return res.status(401).json({ message: 'กรุณาใส่ Token' });
     }
 
-    const decodedToken = jwt.verify(accessToken, config.accessSecretKey);
+    const accessToken = authorizationHeader.split(' ')[1];
+    if (!accessToken) {
+      return res.status(401).json({ message: 'Token ไม่ถูกต้อง' });
+    }
+
+    let decodedToken;
+    try {
+      decodedToken = jwt.verify(accessToken, config.accessSecretKey);
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        return res.status(401).json({ message: 'Token หมดอายุ' });
+      } else if (error instanceof jwt.JsonWebTokenError) {
+        return res.status(401).json({ message: 'Token ไม่ถูกต้อง' });
+      }
+      throw error;
+    }
+
     const userId = decodedToken.userId;
 
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'ไม่พบข้อมูลผู้ใช้' });
-    }
 
     return res.json({
       email: user.email,
