@@ -1,4 +1,4 @@
-const BugReport = require('../models/bugReport.js');
+const BugReport = require('../models/bugReport');
 const {
   getStorage,
   ref,
