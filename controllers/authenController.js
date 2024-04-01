@@ -40,7 +40,17 @@ const login = async (req, res) => {
         { expiresIn: '7d' }
       )
 
-      return res.json({ accessToken, refreshToken })
+      const profileData = {
+        email: user.email,
+        displayName: user.displayName,
+        picture: user.picture,
+        districtSubscribe: user.districtSubscribe,
+        notifyToken: user.notifyToken,
+        notificationByLine: user.notificationByLine,
+        notificationByEmail: user.notificationByEmail,
+      }
+
+      return res.json({ accessToken, refreshToken, profileData })
     } else if (registerType === 'LINE') {
       const user = await User.findOne({ lineId: lineId })
       if (!user) {
@@ -72,7 +82,17 @@ const login = async (req, res) => {
         { expiresIn: '7d' }
       )
 
-      return res.json({ accessToken, refreshToken })
+      const profileData = {
+        email: user.email,
+        displayName: user.displayName,
+        picture: user.picture,
+        districtSubscribe: user.districtSubscribe,
+        notifyToken: user.notifyToken,
+        notificationByLine: user.notificationByLine,
+        notificationByEmail: user.notificationByEmail,
+      }
+
+      return res.json({ accessToken, refreshToken, profileData })
     }
   } catch (error) {
     console.error(error)
@@ -82,42 +102,48 @@ const login = async (req, res) => {
 
 const getProfile = async (req, res) => {
   try {
-    const authorizationHeader = req.headers.authorization;
+    const authorizationHeader = req.headers.authorization
     if (!authorizationHeader) {
-      return res.status(401).json({ message: 'กรุณาใส่ Token' });
+      return res.status(401).json({ message: 'กรุณาใส่ Token' })
     }
 
-    const accessToken = authorizationHeader.split(' ')[1];
+    const accessToken = authorizationHeader.split(' ')[1]
     if (!accessToken) {
-      return res.status(401).json({ message: 'Token ไม่ถูกต้อง' });
+      return res.status(401).json({ message: 'Token ไม่ถูกต้อง' })
     }
 
-    let decodedToken;
+    let decodedToken
     try {
-      decodedToken = jwt.verify(accessToken, config.accessSecretKey);
+      decodedToken = jwt.verify(accessToken, config.accessSecretKey)
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
-        return res.status(401).json({ message: 'Token หมดอายุ' });
+        return res.status(401).json({ message: 'Token หมดอายุ' })
       } else if (error instanceof jwt.JsonWebTokenError) {
-        return res.status(401).json({ message: 'Token ไม่ถูกต้อง' });
+        return res.status(401).json({ message: 'Token ไม่ถูกต้อง' })
       }
-      throw error;
+      throw error
     }
 
-    const userId = decodedToken.userId;
+    const userId = decodedToken.userId
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userId)
 
     return res.json({
       email: user.email,
       displayName: user.displayName,
       picture: user.picture,
-    });
+      districtSubscribe: user.districtSubscribe,
+      notifyToken: user.notifyToken,
+      notificationByLine: user.notificationByLine,
+      notificationByEmail: user.notificationByEmail,
+    })
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลโปรไฟล์' });
+    console.error(error)
+    return res
+      .status(500)
+      .json({ message: 'เกิดข้อผิดพลาดในการดึงข้อมูลโปรไฟล์' })
   }
-};
+}
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers['authorization']
@@ -164,28 +190,34 @@ const forgotPassword = async (req, res) => {
 }
 
 const resetPassword = async (req, res) => {
-  const { resetLink, newPass } = req.body;
+  const { resetLink, newPass } = req.body
   if (resetLink) {
     try {
-      const decoded = jwt.verify(resetLink, config.accessSecretKey);
-      const user = await User.findOne({ resetLink });
+      const decoded = jwt.verify(resetLink, config.accessSecretKey)
+      const user = await User.findOne({ resetLink })
 
       if (!user) {
-        return res.status(400).json({ message: 'ไม่มีผู้ใช้ที่มีโทเคนนี้อยู่' });
+        return res.status(400).json({ message: 'ไม่มีผู้ใช้ที่มีโทเคนนี้อยู่' })
       }
 
-      const hashedPassword = await bcrypt.hash(newPass, 10);
-      user.password = hashedPassword;
-      user.resetLink = ''; 
-      await user.save();
+      const hashedPassword = await bcrypt.hash(newPass, 10)
+      user.password = hashedPassword
+      user.resetLink = ''
+      await user.save()
 
-      return res.status(200).json({ message: 'เปลี่ยนรหัสผ่านสำเร็จแล้ว' });
+      return res.status(200).json({ message: 'เปลี่ยนรหัสผ่านสำเร็จแล้ว' })
     } catch (error) {
-      return res.status(401).json({ message: 'โทเคนผิดหรือหมดอายุ' });
+      return res.status(401).json({ message: 'โทเคนผิดหรือหมดอายุ' })
     }
   } else {
-    return res.status(400).json({ message: 'โทเคนไม่ถูกต้อง' });
+    return res.status(400).json({ message: 'โทเคนไม่ถูกต้อง' })
   }
-};
+}
 
-module.exports = { login, verifyToken, getProfile, forgotPassword, resetPassword}
+module.exports = {
+  login,
+  verifyToken,
+  getProfile,
+  forgotPassword,
+  resetPassword,
+}
