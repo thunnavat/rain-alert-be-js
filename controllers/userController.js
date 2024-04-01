@@ -40,37 +40,39 @@ const register = async (req, res) => {
 
       const hashedPassword = await bcrypt.hash(password, 10)
 
-      const allowedFileExtensions = ['jpg', 'jpeg', 'png', 'gif']
+      let pictureURL = null;
+      if (req.file) {
+        const allowedFileExtensions = ['jpg', 'jpeg', 'png', 'gif']
+        const fileExtension = req.file.originalname.split('.').pop().toLowerCase()
+        if (!allowedFileExtensions.includes(fileExtension)) {
+          return res
+            .status(400)
+            .json({ message: 'นามสกุลของไฟล์รูปภาพไม่ถูกต้อง' })
+        }
 
-      const fileExtension = req.file.originalname.split('.').pop().toLowerCase()
-      if (!allowedFileExtensions.includes(fileExtension)) {
-        return res
-          .status(400)
-          .json({ message: 'นามสกุลของไฟล์รูปภาพไม่ถูกต้อง' })
+        const storage = getStorage()
+        const storageRef = ref(storage, `profiles/${email}/profile.jpg`)
+        const metadata = {
+          contentType: req.file.mimetype,
+        }
+        const snapshot = await uploadBytesResumable(
+          storageRef,
+          req.file.buffer,
+          metadata
+        )
+        pictureURL = await getDownloadURL(snapshot.ref)
       }
-
-      const storage = getStorage()
-      const storageRef = ref(storage, `profiles/${email}/profile.jpg`)
-      const metadata = {
-        contentType: req.file.mimetype,
-      }
-      const snapshot = await uploadBytesResumable(
-        storageRef,
-        req.file.buffer,
-        metadata
-      )
-      const pictureURL = await getDownloadURL(snapshot.ref)
-      const picture = pictureURL
 
       const newUser = new User({
         email,
         password: hashedPassword,
         displayName,
-        picture,
+        picture: pictureURL, 
         registerType,
         role,
       })
       await newUser.save()
+      
       // const insUser = await User.findOne({ email: email })
       // const userId = insUser._id
       // const newDistrictUserSubscribe = new DistrictUserSubscribe({
@@ -78,7 +80,6 @@ const register = async (req, res) => {
       //   districtSubscribe: [],
       // })
       // await newDistrictUserSubscribe.save()
-      console.log(picture)
       return res.status(200).json({ message: 'สร้างบัญชีสำเร็จ' })
     } else if (registerType === 'LINE') {
       const user = await User.findOne({ email: email })
