@@ -18,6 +18,14 @@ const createBugReport = async (req, res) => {
 
     let picture = null;
     if (req.file) {
+              const allowedFileExtensions = ['jpg', 'jpeg', 'png', 'gif']
+        const fileExtension = req.file.originalname.split('.').pop().toLowerCase()
+        if (!allowedFileExtensions.includes(fileExtension)) {
+          return res
+            .status(400)
+            .json({ message: 'นามสกุลของไฟล์รูปภาพไม่ถูกต้อง' })
+        }
+
       const storage = getStorage();
       const storageRef = ref(storage, `bugReports/${userId}/bugReport_${timestamp}`);
       const metadata = {
