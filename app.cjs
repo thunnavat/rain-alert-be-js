@@ -8,6 +8,7 @@ const authenRoute = require('./routes/authenRoute')
 // const districtUserSubscribeRoute = require('./routes/districtUserSubscribeRoute')
 const adminRoute = require('./routes/adminRoute')
 const bugReportRoute = require('./routes/bugReportRoute')
+const lineNotifyRoute = require('./routes/lineNotifyRoute')
 require('dotenv').config();
 const firebase = require('firebase/app')
 
@@ -20,6 +21,7 @@ app.use('/api/login', authenRoute)
 // app.use('/api/districtUserSubscribe', districtUserSubscribeRoute)
 app.use('/api/admin', adminRoute)
 app.use('/api/bugReport', bugReportRoute)
+app.use('/api/notifyredirect', lineNotifyRoute)
 
 const firebaseConfig = {
   apikey: config.apiKey,
