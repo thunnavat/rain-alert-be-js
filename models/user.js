@@ -30,6 +30,26 @@ const userSchema = new mongoose.Schema({
     enum: ['LINE', 'WEB'],
     required: true,
   },
+  districtSubscribe: {
+    type: Array,
+    default: [],
+    required: false,
+  },
+  notifyToken: {
+    type: String,
+    default: '',
+    required: false,
+  },
+  notificationByLine: {
+    type: Boolean,
+    default: false,
+    required: false,
+  },
+  notificationByEmail: {
+    type: Boolean,
+    default: false,
+    required: false,
+  },
   role: {
     type: String,
     enum: ['ADMIN', 'USER'],
