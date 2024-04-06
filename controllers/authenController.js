@@ -4,6 +4,7 @@ const _ = require('lodash')
 const User = require('../models/user.js')
 const config = require('../config/config.js')
 const sendEmail = require('../middleware/sendEmail.js')
+const emailVerificationModel = require('../models/emailVerification.js');
 require('dotenv').config()
 
 const login = async (req, res) => {
@@ -16,6 +17,13 @@ const login = async (req, res) => {
           .status(401)
           .json({ message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' })
       }
+
+      if (!user.isEmailVerified) {
+        return res
+          .status(401)
+          .json({ message: 'กรุณายืนยันอีเมลของคุณก่อนที่จะเข้าสู่ระบบ' })
+      }
+
       const passwordMatch = await bcrypt.compare(password, user.password)
       if (!passwordMatch) {
         return res
@@ -214,10 +222,57 @@ const resetPassword = async (req, res) => {
   }
 }
 
+const requestEmailVerification = async (req, res) => {
+  const { email } = req.body;
+  const otp = emailVerificationModel.generateOTP();
+  emailVerificationModel.setEmailOTP(email, otp);
+  const subject = 'Email Verification OTP';
+  const url = `Your OTP is: ${otp}`;
+  
+  try {
+    await sendEmail(email, subject, url);
+    res.status(200).json({ message: 'ส่งรหัส OTP ไปยัง Email ของคุณแล้ว' });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในการส่งรหัส OTP ' });
+  }
+}
+
+async function verifyEmail(req, res) {
+  const { email, otp } = req.body;
+
+  try {
+    const storedOTP = emailVerificationModel.getEmailOTP(email);
+
+    if (!storedOTP) {
+      return res.status(400).json({ message: 'ไม่เจอรหัส OTP' });
+    }
+
+    if (storedOTP.otp !== otp) {
+      return res.status(400).json({ message: 'รหัส OTP ไม่ถูกต้อง' });
+    }
+
+    const currentTime = Date.now();
+    if (storedOTP.expiryTime < currentTime) {
+      emailVerificationModel.deleteEmailOTP(email);
+      return res.status(400).json({ message: 'รหัส OTP หมดอายุ' });
+    }
+
+    await User.updateOne({ email: email }, { isEmailVerified: true });
+    emailVerificationModel.deleteEmailOTP(email);
+    res.status(200).json({ message: 'Email ได้รับการยืนยันแล้ว' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดภายใน' });
+  }
+}
+
 module.exports = {
   login,
   verifyToken,
   getProfile,
   forgotPassword,
   resetPassword,
+  requestEmailVerification,
+  verifyEmail,
 }

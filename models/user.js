@@ -59,6 +59,10 @@ const userSchema = new mongoose.Schema({
   resetLink:{
     type: String,
     default: ''
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: false
   }
 })
 
