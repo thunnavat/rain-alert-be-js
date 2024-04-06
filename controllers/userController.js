@@ -9,8 +9,8 @@ const {
   getDownloadURL,
   uploadBytesResumable,
 } = require('firebase/storage')
-// const Token = require('../models/token.js')
-// const sendEmail = require('../middleware/sendEmail.js')
+const EmailVerificationModel = require('../models/emailVerification.js')
+const sendEmail = require('../middleware/sendEmail.js')
 
 const register = async (req, res) => {
   try {
@@ -24,13 +24,20 @@ const register = async (req, res) => {
       lineId,
     } = req.body
     if (registerType === 'WEB') {
+
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/
+
       if (!email || !password || !displayName || !registerType) {
         return res.status(400).json({ message: 'ข้อมูลที่ต้องการไม่ครบ' })
       }
 
       if (!emailRegex.test(email)) {
         return res.status(400).json({ message: 'รูปแบบอีเมลไม่ถูกต้อง' })
+      }
+
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({ message: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และอักขระพิเศษ' })
       }
 
       const user = await User.findOne({ email: email })
@@ -51,7 +58,7 @@ const register = async (req, res) => {
         }
 
         const storage = getStorage()
-        const storageRef = ref(storage, `profiles/${email}/profile.jpg`)
+        const storageRef = ref(storage, `profiles/${email}/profile`)
         const metadata = {
           contentType: req.file.mimetype,
         }
@@ -72,15 +79,13 @@ const register = async (req, res) => {
         role,
       })
       await newUser.save()
-      
-      // const insUser = await User.findOne({ email: email })
-      // const userId = insUser._id
-      // const newDistrictUserSubscribe = new DistrictUserSubscribe({
-      //   userId: userId,
-      //   districtSubscribe: [],
-      // })
-      // await newDistrictUserSubscribe.save()
-      return res.status(200).json({ message: 'สร้างบัญชีสำเร็จ' })
+
+    const otp = EmailVerificationModel.generateOTP(email);
+    const subject = 'Email Verification OTP';
+    const url = `Your OTP is: ${otp}`;
+    await sendEmail(email, subject, url);
+
+    res.status(200).json({ message: 'ลงทะเบียนเสร็จสมบูรณ์ กรุณายืนยันอีเมลของคุณ' });
     } else if (registerType === 'LINE') {
       const user = await User.findOne({ email: email })
       if (user && user.registerType === 'WEB') {
@@ -242,6 +247,10 @@ const changePassword = async (req, res) => {
       return res.status(404).json({ message: 'ไม่พบผู้ใช้' })
     }
 
+    if (user.registerType === 'LINE') {
+      return res.status(400).json({ message: 'ไม่สามารถเปลี่ยนรหัสผ่านได้' })
+    }
+    
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password)
 
     if (!isPasswordValid) {

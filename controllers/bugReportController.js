@@ -14,8 +14,8 @@ const createBugReport = async (req, res) => {
     }
 
     const userId = req.user ? req.user.userId : "defaultUserId";
-    const timestamp = Date.now(); // หรือจะใช้ Date() ก็ได้
-
+    const timestamp = Date.now(); 
+    
     let picture = null;
     if (req.file) {
               const allowedFileExtensions = ['jpg', 'jpeg', 'png', 'gif']
