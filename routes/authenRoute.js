@@ -7,7 +7,7 @@ router.get('/profile', AuthenController.getProfile)
 router.post('/forgot-password', AuthenController.forgotPassword)
 router.put('/reset-password', AuthenController.resetPassword)
 router.post('/request-email-verification', AuthenController.requestEmailVerification)
-router.post('/verify-email', AuthenController.verifyEmail)
+// router.post('/verify-email', AuthenController.verifyEmail)
 
 
 module.exports = router

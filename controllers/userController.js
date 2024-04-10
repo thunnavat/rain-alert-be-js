@@ -2,15 +2,14 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const User = require('../models/user.js')
 const config = require('../config/config.js')
-const DistrictUserSubscribe = require('../models/districtUserSubscribe')
 const {
   getStorage,
   ref,
   getDownloadURL,
   uploadBytesResumable,
 } = require('firebase/storage')
-const EmailVerificationModel = require('../models/emailVerification.js')
-const sendEmail = require('../middleware/sendEmail.js')
+const emailVerificationModel = require('../models/emailVerification.js')
+// const sendEmail = require('../middleware/sendEmail.js')
 
 const register = async (req, res) => {
   try {
@@ -22,8 +21,30 @@ const register = async (req, res) => {
       registerType,
       role,
       lineId,
+      otp,
     } = req.body
     if (registerType === 'WEB') {
+      const storedOTP = emailVerificationModel.getEmailOTP(email)
+
+      if (!otp) {
+        return res.status(400).json({ message: 'กรุณากรอกรหัส OTP' })
+      }  
+
+      if (!storedOTP) {
+        return res.status(400).json({ message: 'ไม่เจอรหัส OTP' })
+      }
+
+      if (storedOTP.otp !== otp) {
+        return res.status(400).json({ message: 'รหัส OTP ไม่ถูกต้อง' })
+      }
+
+      const currentTime = Date.now()
+      if (storedOTP.expiryTime < currentTime) {
+        emailVerificationModel.deleteEmailOTP(email)
+        return res.status(400).json({ message: 'รหัส OTP หมดอายุ' })
+      }
+
+      emailVerificationModel.deleteEmailOTP(email)
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/
@@ -37,7 +58,12 @@ const register = async (req, res) => {
       }
 
       if (!passwordRegex.test(password)) {
-        return res.status(400).json({ message: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และอักขระพิเศษ' })
+        return res
+          .status(400)
+          .json({
+            message:
+              'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และอักขระพิเศษ',
+          })
       }
 
       const user = await User.findOne({ email: email })
@@ -47,10 +73,13 @@ const register = async (req, res) => {
 
       const hashedPassword = await bcrypt.hash(password, 10)
 
-      let pictureURL = null;
+      let pictureURL = null
       if (req.file) {
         const allowedFileExtensions = ['jpg', 'jpeg', 'png', 'gif']
-        const fileExtension = req.file.originalname.split('.').pop().toLowerCase()
+        const fileExtension = req.file.originalname
+          .split('.')
+          .pop()
+          .toLowerCase()
         if (!allowedFileExtensions.includes(fileExtension)) {
           return res
             .status(400)
@@ -74,18 +103,13 @@ const register = async (req, res) => {
         email,
         password: hashedPassword,
         displayName,
-        picture: pictureURL, 
+        picture: pictureURL,
         registerType,
         role,
       })
       await newUser.save()
 
-    const otp = EmailVerificationModel.generateOTP(email);
-    const subject = 'Email Verification OTP';
-    const url = `Your OTP is: ${otp}`;
-    await sendEmail(email, subject, url);
-
-    res.status(200).json({ message: 'ลงทะเบียนเสร็จสมบูรณ์ กรุณายืนยันอีเมลของคุณ' });
+      res.status(200).json({ message: 'ลงทะเบียนเสร็จสมบูรณ์' })
     } else if (registerType === 'LINE') {
       const user = await User.findOne({ email: email })
       if (user && user.registerType === 'WEB') {
@@ -250,7 +274,7 @@ const changePassword = async (req, res) => {
     if (user.registerType === 'LINE') {
       return res.status(400).json({ message: 'ไม่สามารถเปลี่ยนรหัสผ่านได้' })
     }
-    
+
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password)
 
     if (!isPasswordValid) {
