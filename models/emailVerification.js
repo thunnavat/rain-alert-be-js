@@ -1,7 +1,7 @@
 const otpGenerator = require('otp-generator')
 
 const emailOtpMap = new Map()
-const otpExpiryTime = 5 * 60 * 1000
+const otpExpiryTime = 10 * 60 * 1000
 
 function generateOTP(email) {
   const otp = otpGenerator.generate(6, {
