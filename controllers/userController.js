@@ -28,7 +28,7 @@ const register = async (req, res) => {
 
       if (!otp) {
         return res.status(400).json({ message: 'กรุณากรอกรหัส OTP' })
-      }  
+      }
 
       if (!storedOTP) {
         return res.status(400).json({ message: 'ไม่เจอรหัส OTP' })
@@ -58,12 +58,10 @@ const register = async (req, res) => {
       }
 
       if (!passwordRegex.test(password)) {
-        return res
-          .status(400)
-          .json({
-            message:
-              'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และอักขระพิเศษ',
-          })
+        return res.status(400).json({
+          message:
+            'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และอักขระพิเศษ',
+        })
       }
 
       const user = await User.findOne({ email: email })
@@ -113,10 +111,10 @@ const register = async (req, res) => {
     } else if (registerType === 'LINE') {
       const user = await User.findOne({ email: email })
       if (user && user.registerType === 'WEB') {
-        user.lineId = lineId
-        user.displayName = displayName
-        user.picture = picture
-        await user.save()
+        return res.status(400).json({
+          message:
+            'อีเมลนี้ได้ลงทะเบียนกับระบบไว้แล้ว คุณต้องการรวมบัญชีหรือไม่',
+        })
       }
 
       const existingUser = await User.findOne({ lineId: lineId })
@@ -136,13 +134,6 @@ const register = async (req, res) => {
           role,
         })
         await newUser.save()
-        const insUser = await User.findOne({ lineId: lineId })
-        const userId = insUser._id
-        const newDistrictUserSubscribe = new DistrictUserSubscribe({
-          userId: userId,
-          districtSubscribe: [],
-        })
-        await newDistrictUserSubscribe.save()
         return res.status(200).json({ message: 'สร้างบัญชีสำเร็จ' })
       }
     } else {
@@ -151,6 +142,46 @@ const register = async (req, res) => {
     }
   } catch (error) {
     console.log(req.body)
+    console.error(error)
+    return res.status(500).json({ error })
+  }
+}
+
+const getDistrictSubsribeByEmail = async (req, res) => {
+  try {
+    const { email } = req.body
+    const user = await User.findOne({ email: email })
+    if (!user) {
+      return res.status(404).json({ message: 'ไม่พบผู้ใช้' })
+    }
+    res.status(200).json({ districtSubscribe: user.districtSubscribe })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({ error })
+  }
+}
+
+const userMerge = async (req, res) => {
+  try {
+    const {
+      email,
+      lineId,
+      displayName,
+      picture,
+      districtSubscribe,
+    } = req.body
+    const user = await User.findOne({ email: email })
+    const lineUser = await User.findOne({ lineId: lineId })
+    if (user && lineUser && user._id.toString() !== lineUser._id.toString()) {
+      await User.delete({ lineId: lineId })
+    }
+    user.lineId = lineId
+    user.displayName = displayName
+    user.picture = picture
+    user.districtSubscribe = districtSubscribe
+    await user.save()
+    res.status(200).json({ message: 'รวมบัญชีสำเร็จ' })
+  } catch (error) {
     console.error(error)
     return res.status(500).json({ error })
   }
@@ -292,4 +323,11 @@ const changePassword = async (req, res) => {
   }
 }
 
-module.exports = { register, refreshToken, updateProfile, changePassword }
+module.exports = {
+  register,
+  refreshToken,
+  updateProfile,
+  changePassword,
+  getDistrictSubsribeByEmail,
+  userMerge,
+}
