@@ -18,12 +18,6 @@ const login = async (req, res) => {
           .json({ message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' })
       }
 
-      if (!user.isEmailVerified) {
-        return res
-          .status(401)
-          .json({ message: 'กรุณายืนยันอีเมลของคุณก่อนที่จะเข้าสู่ระบบ' })
-      }
-
       const passwordMatch = await bcrypt.compare(password, user.password)
       if (!passwordMatch) {
         return res
