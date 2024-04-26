@@ -3,7 +3,6 @@ module.exports = {
   refreshSecretKey: 'my_refresh_secret_key_456',
   resetPasswordSecretKey: 'my_reset_secret_key_789',
   
-  // firebaseConfig
   apiKey: "AIzaSyD-zWXbavSzMu3FXylUokOzJLTIBXYhuAM",
   authDomain: "rainalert-46c79.firebaseapp.com",
   projectId: "rainalert-46c79",
