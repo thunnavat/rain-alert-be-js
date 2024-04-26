@@ -1,10 +1,11 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const _ = require('lodash')
+const F = require('lodash')
 const User = require('../models/user.js')
 const config = require('../config/config.js')
 const sendEmail = require('../middleware/sendEmail.js')
 const emailVerificationModel = require('../models/emailVerification.js');
+const { register } = require('./userController.js')
 require('dotenv').config()
 
 const login = async (req, res) => {
@@ -16,12 +17,6 @@ const login = async (req, res) => {
         return res
           .status(401)
           .json({ message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' })
-      }
-
-      if (!user.isEmailVerified) {
-        return res
-          .status(401)
-          .json({ message: 'กรุณายืนยันอีเมลของคุณก่อนที่จะเข้าสู่ระบบ' })
       }
 
       const passwordMatch = await bcrypt.compare(password, user.password)
@@ -140,6 +135,7 @@ const getProfile = async (req, res) => {
       email: user.email,
       displayName: user.displayName,
       picture: user.picture,
+      registerType: user.registerType,
       districtSubscribe: user.districtSubscribe,
       notifyToken: user.notifyToken,
       notificationByLine: user.notificationByLine,

@@ -285,6 +285,9 @@ const changePassword = async (req, res) => {
   try {
     const { userId } = req.user
     const { currentPassword, newPassword, retypePassword } = req.body
+    const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/;
+
+    const user = await User.findById(userId)
 
     if (!currentPassword || !newPassword || !retypePassword) {
       return res.status(400).json({ message: 'โปรดกรอกข้อมูลให้ครบทุกช่อง' })
@@ -296,14 +299,18 @@ const changePassword = async (req, res) => {
         .json({ message: 'รหัสผ่านใหม่และรหัสผ่านยืนยันไม่ตรงกัน' })
     }
 
-    const user = await User.findById(userId)
-
     if (!user) {
       return res.status(404).json({ message: 'ไม่พบผู้ใช้' })
     }
 
-    if (user.registerType === 'LINE') {
+    if (user.registerType === 'LINE' && !user.password) {
       return res.status(400).json({ message: 'ไม่สามารถเปลี่ยนรหัสผ่านได้' })
+    }
+
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({
+        message: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และอักขระพิเศษ',
+      });
     }
 
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password)
