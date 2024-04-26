@@ -125,10 +125,10 @@ const getReportsBySpecificTime = async (specificTime) => {
     })
     result.sort((a, b) => {
       const statusOrder = {
-        'heavy rain': 0,
-        'moderate rain': 1,
-        'light rain': 2,
-        'no rain': 3,
+        'HEAVY RAIN': 0,
+        'MODERATE RAIN': 1,
+        'LIGHT RAIN': 2,
+        'NO RAIN': 3,
       }
       return (
         statusOrder[a.rainStatus] - statusOrder[b.rainStatus] ||
