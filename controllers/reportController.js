@@ -14,17 +14,6 @@ const getReports = async (req, res) => {
       })
     }
 
-    if (rainStatus) {
-      if (rainStatus.toLowerCase() !== 'all') {
-        const rainStatusArray = rainStatus.split(',')
-        let filteredReports = reports
-        filteredReports = reports.filter((report) =>
-          rainStatusArray.includes(report.rainStatus)
-        )
-        reports = filteredReports
-      }
-    }
-
     if (sort) {
       const [sortBy, sortOrder] = sort.split(',')
       if (sortBy === 'distinctname' && sortOrder === 'asc') {
@@ -39,6 +28,16 @@ const getReports = async (req, res) => {
             a.reportDistrict.districtName
           )
         )
+      }
+    }
+    if (rainStatus) {
+      if (rainStatus.toLowerCase() !== 'all') {
+        const rainStatusArray = rainStatus.split(',')
+        let filteredReports = reports
+        filteredReports = reports.filter((report) =>
+          rainStatusArray.includes(report.rainStatus)
+        )
+        reports = filteredReports
       }
     }
 
@@ -86,7 +85,7 @@ const getUniqueTimeFromReports = async (req, res) => {
       }))
     )
   } catch (error) {
-    res.status(500).json({ message: 'เกิดข้อผิดพลาดในดึงเวลาที่เป็นยูนีค'  })
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในดึงเวลาที่เป็นยูนีค' })
     throw error
   }
 }
@@ -141,7 +140,7 @@ const getReportsBySpecificTime = async (specificTime) => {
     return result
   } catch (error) {
     console.error(error.message)
-    res.status(500).json({ message: 'เกิดข้อผิดพลาดในดึงข้อมูลเขตตามเวลา'  })
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดในดึงข้อมูลเขตตามเวลา' })
     throw error
   }
 }
