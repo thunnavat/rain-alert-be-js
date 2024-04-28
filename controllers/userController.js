@@ -47,7 +47,7 @@ const register = async (req, res) => {
       emailVerificationModel.deleteEmailOTP(email)
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/
+      const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,30}$/
 
       if (!email || !password || !displayName || !registerType) {
         return res.status(400).json({ message: 'ข้อมูลที่ต้องการไม่ครบ' })
@@ -60,7 +60,19 @@ const register = async (req, res) => {
       if (!passwordRegex.test(password)) {
         return res.status(400).json({
           message:
-            'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และอักขระพิเศษ',
+            'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษรและมากที่สุด 30 ตัว โดยต้องประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และอักขระพิเศษ',
+        })
+      }
+
+      if (email.length > 50) {
+        return res.status(400).json({
+          message: 'อีเมลต้องมีความยาวไม่เกิน 50 ตัวอักษร',
+        })
+      }
+
+      if (displayName.length > 50) {
+        return res.status(400).json({
+          message: 'DisplayName ต้องมีไม่เกิน 50 ตัวอักษร',
         })
       }
 
@@ -82,6 +94,13 @@ const register = async (req, res) => {
           return res
             .status(400)
             .json({ message: 'นามสกุลของไฟล์รูปภาพไม่ถูกต้อง' })
+        }
+
+        const maxSizeInBytes = 5 * 1024 * 1024
+        if (req.file.size > maxSizeInBytes) {
+          return res
+            .status(400)
+            .json({ message: 'ขนาดของไฟล์รูปภาพต้องไม่เกิน 5 MB' })
         }
 
         const storage = getStorage()
@@ -163,13 +182,7 @@ const getDistrictSubsribeByEmail = async (req, res) => {
 
 const userMerge = async (req, res) => {
   try {
-    const {
-      email,
-      lineId,
-      displayName,
-      picture,
-      districtSubscribe,
-    } = req.body
+    const { email, lineId, displayName, picture, districtSubscribe } = req.body
     const user = await User.findOne({ email: email })
     const lineUser = await User.findOne({ lineId: lineId })
     if (user && lineUser && user._id.toString() !== lineUser._id.toString()) {
@@ -285,7 +298,7 @@ const changePassword = async (req, res) => {
   try {
     const { userId } = req.user
     const { currentPassword, newPassword, retypePassword } = req.body
-    const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/;
+    const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/
 
     const user = await User.findById(userId)
 
@@ -309,8 +322,9 @@ const changePassword = async (req, res) => {
 
     if (!passwordRegex.test(newPassword)) {
       return res.status(400).json({
-        message: 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และอักขระพิเศษ',
-      });
+        message:
+          'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร ประกอบด้วยตัวเลข ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และอักขระพิเศษ',
+      })
     }
 
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password)
@@ -330,6 +344,31 @@ const changePassword = async (req, res) => {
   }
 }
 
+const checkEmailExist = async (req, res) => {
+  try {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const email = req.body.email // ใช้ตัวแปร email โดยตรงจาก req.body
+
+    if (!email) {
+      return res.status(400).json({ message: 'ข้อมูลที่ต้องการไม่ครบ' })
+    }
+
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'รูปแบบอีเมลไม่ถูกต้อง' })
+    }
+
+    const existingUser = await User.findOne({ email })
+    if (existingUser) {
+      return res.status(400).json({ message: 'อีเมลนี้มีอยู่ในระบบแล้ว' })
+    }
+
+    return res.status(200).json({ message: 'อีเมลนี้สามารถใช้งานได้' })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({ message: 'เกิดข้อผิดพลาดในการตรวจสอบอีเมล' })
+  }
+}
+
 module.exports = {
   register,
   refreshToken,
@@ -337,4 +376,5 @@ module.exports = {
   changePassword,
   getDistrictSubsribeByEmail,
   userMerge,
+  checkEmailExist,
 }

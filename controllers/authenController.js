@@ -234,34 +234,6 @@ const requestEmailVerification = async (req, res) => {
   }
 }
 
-// const verifyEmail = async (req, res) => {
-//   const { email, otp } = req.body;
-
-//   try {
-//     const storedOTP = emailVerificationModel.getEmailOTP(email);
-
-//     if (!storedOTP) {
-//       return res.status(400).json({ message: 'ไม่เจอรหัส OTP' });
-//     }
-
-//     if (storedOTP.otp !== otp) {
-//       return res.status(400).json({ message: 'รหัส OTP ไม่ถูกต้อง' });
-//     }
-
-//     const currentTime = Date.now();
-//     if (storedOTP.expiryTime < currentTime) {
-//       emailVerificationModel.deleteEmailOTP(email);
-//       return res.status(400).json({ message: 'รหัส OTP หมดอายุ' });
-//     }
-
-//     await User.updateOne({ email: email }, { isEmailVerified: true });
-//     emailVerificationModel.deleteEmailOTP(email);
-//     res.status(200).json({ message: 'Email ได้รับการยืนยันแล้ว' });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: 'เกิดข้อผิดพลาดภายใน' });
-//   }
-// }
 
 module.exports = {
   login,
@@ -270,5 +242,4 @@ module.exports = {
   forgotPassword,
   resetPassword,
   requestEmailVerification,
-  // verifyEmail,
 }
