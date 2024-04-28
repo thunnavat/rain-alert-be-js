@@ -12,6 +12,7 @@ router.put('/updateProfile', AuthenController.verifyToken ,upload.single("pictur
 router.put('/changePassword', AuthenController.verifyToken, userController.changePassword)
 router.post('/districtSubscribe', userController.getDistrictSubsribeByEmail)
 router.post('/userMerge', userController.userMerge)
+router.post('/checkEmail', userController.checkEmailExist)
 
 module.exports = router
 
