@@ -4,7 +4,7 @@ const F = require('lodash')
 const User = require('../models/user.js')
 const config = require('../config/config.js')
 const sendEmail = require('../middleware/sendEmail.js')
-const emailVerificationModel = require('../models/emailVerification.js');
+const emailVerificationModel = require('../middleware/emailVerification.js');
 const { register } = require('./userController.js')
 require('dotenv').config()
 

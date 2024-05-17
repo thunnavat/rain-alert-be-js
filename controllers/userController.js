@@ -8,7 +8,7 @@ const {
   getDownloadURL,
   uploadBytesResumable,
 } = require('firebase/storage')
-const emailVerificationModel = require('../models/emailVerification.js')
+const emailVerificationModel = require('../middleware/emailVerification.js')
 // const sendEmail = require('../middleware/sendEmail.js')
 
 const register = async (req, res) => {
